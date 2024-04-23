@@ -5,24 +5,44 @@ CREATE DATABASE healthy_DB;
 -- 使用 healthy_DB 数据库
 USE healthy_DB;
 
+
+-- 约定
+-- 用户主键为 9 位数字
+
+
 -- 判断用户表是否已经存在，不存在则创建
 -- 用户ID：主键、自增长、整数类型、从 1000 开始递增
 -- 用户名：字符串类型、长度为 20、可为空
 -- 电话：字符串类型、长度为 11、可为空
--- 邮箱：字符串类型长度为 50、可为空
+-- 邮箱：字符串类型、长度为 50、可为空
 -- 密码：字符串类型、长度为 50、不可为空
 -- 密码加密盐：字符串类型、长度为 8、不可为空
 -- 头像：字符串类型、长度为 255、可为空
 CREATE TABLE IF NOT EXISTS user (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(20) NULL,
-    phone VARCHAR(11) NULL,
+    phone VARCHAR(20) NULL,
     email VARCHAR(50) NULL,
     password VARCHAR(50) NOT NULL,
     salt VARCHAR(8) NOT NULL,
     avatar VARCHAR(255) NULL
 );
 
+
+-- 判断用户账户绑定第三方账号表是否存在，如果不存在则创建
+-- 绑定ID：主键、自增长、整数类型
+-- 用户ID：整数类型、外键，引用用户表的主键
+-- 邮箱：字符串类型、长度为 50、可为空
+-- 华为账号：字符串类型、长度为 50、可为空
+-- 创建时间：日期时间类型、不可为空
+CREATE TABLE IF NOT EXISTS user_account_binding (
+    user_account_binding_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    email VARCHAR(50) NULL,
+    huawei_account VARCHAR(50) NULL,
+    create_time DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(user_id)
+);
 
 
 -- 判断用户信息表是否已经存在，不存在则创建
@@ -43,30 +63,6 @@ CREATE TABLE IF NOT EXISTS user_info (
     gender BOOLEAN NULL,
     create_time DATETIME NOT NULL,
     update_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
--- 判断运动记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 运动类型：字符串类型，'室外跑步'、'室外健走'、'室外骑行'、'室内跑步'、不可为空
--- 运动时间：日期时间类型、不可为空
--- 消耗能量：整数类型、不可为空
--- 运动距离：浮点数类型、不可为空
--- 运动时长：整数类型、不可为空
--- 运动轨迹：文本类型、可为空
--- 创建时间：日期时间类型，不可为空
-CREATE TABLE IF NOT EXISTS exercise_record (
-    exercise_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    exercise_type VARCHAR(20) NOT NULL,
-    exercise_time DATETIME NOT NULL,
-    calories_burned INT NOT NULL,
-    distance FLOAT NOT NULL,
-    duration INT NOT NULL,
-    exercise_track TEXT NULL,
-    create_time DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
 
@@ -205,6 +201,30 @@ CREATE TABLE IF NOT EXISTS fat_loss_record (
 )
 
 
+-- 判断运动记录表是否已经存在，不存在则创建
+-- 记录ID：主键、自增长、整数类型
+-- 用户ID：整数类型、外键，引用用户表的主键
+-- 运动类型：字符串类型、长度为20、'室内跑步'、'室内健走'、'室内骑行'、'室外跑步'、'室外健走'、'室外骑行'、不可为空
+-- 运动时间：日期时间类型、不可为空
+-- 消耗能量：整数类型、不可为空
+-- 运动距离：浮点数类型、不可为空
+-- 运动时长：整数类型、不可为空
+-- 运动轨迹：文本类型、可为空
+-- 创建时间：日期时间类型，不可为空
+CREATE TABLE IF NOT EXISTS exercise_record (
+    exercise_record_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    exercise_type VARCHAR(20) NOT NULL,
+    exercise_time DATETIME NOT NULL,
+    calories_burned INT NOT NULL,
+    distance FLOAT NOT NULL,
+    duration INT NOT NULL,
+    exercise_track TEXT NULL,
+    create_time DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(user_id)
+);
+
+
 -- 判断运动计划表是否已经存在，不存在则创建
 -- 计划ID：主键、自增长、整数类型
 -- 用户ID：整数类型、外键，引用用户表的主键
@@ -255,19 +275,33 @@ CREATE TABLE IF NOT EXISTS ai_plan (
 -- 音乐ID：主键、自增长、整数类型
 -- 音乐名称：字符串类型、长度为20、不可为空
 -- 音乐文件路径：字符串类型、长度为255、不可为空
--- 音乐时长：整数类型、不可为空
+-- 音乐时长：整数类型、不可为空、单位为 s
+-- 音乐文件类型：子串串类型、长度为20、不可为空
+-- 音乐文件大小：浮点数类型、不可为空
+-- 音乐文件MD5：字符串类型、长度为32、不可为空
+-- 音乐文件SHA1：字符串类型、长度为40、不可为空
+-- 音乐文件SHA256：字符串类型、长度为64、不可为空
+-- 音乐专辑封面：字符串类型、长度为255、可为空
 -- 标签：字符串类型、长度为50、不可为空
 -- 分类：字符串类型、长度为 5、不可为空
+-- 收听量：整数类型、不可为空、默认为 0
 -- 创建时间：日期时间类型、不可为空
 CREATE TABLE IF NOT EXISTS music (
     music_id INT AUTO_INCREMENT PRIMARY KEY,
     music_name VARCHAR(20) NOT NULL,
     music_file_path VARCHAR(255) NOT NULL,
     music_duration INT NOT NULL,
+    music_file_type VARCHAR(20) NOT NULL,
+    music_file_size FLOAT NOT NULL,
+    music_file_md5 VARCHAR(32) NOT NULL,
+    music_file_sha1 VARCHAR(40) NOT NULL,
+    music_file_sha256 VARCHAR(64) NOT NULL,
+    music_album_cover VARCHAR(255) NULL,
     tags VARCHAR(50) NOT NULL,
     category VARCHAR(5) NOT NULL,
+    listen_count INT NOT NULL DEFAULT 0,
     create_time DATETIME NOT NULL
-);
+)
 
 
 -- 判断收藏音乐表是否已经存在，不存在则创建
