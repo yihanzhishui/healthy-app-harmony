@@ -1,22 +1,24 @@
-### 获取最新一条睡眠数据
+### 添加到饮食记录
 
 #### 简要概述
 
-- 获取最新一条睡眠情况的数据
+- 添加食物到饮食记录
 
 #### 请求URL
 
-- `get_lastest_sleep_record`
+- `add_to_diet_record`
 
 #### 请求方式
 
-- get
+- post
 
 #### 参数
 
-| 参数名  | 必选 | 类型   | 说明   |
-| :------ | :--- | :----- | ------ |
-| user_id | 是   | number | 用户id |
+| 参数名    | 必选 | 类型   | 说明                           |
+| :-------- | :--- | :----- | ------------------------------ |
+| user_id   | 是   | number | 用户id                         |
+| diet_type | 是   | string | 饮食类型：早，中，晚，加       |
+| food_list | 是   | array  | 本次需要添加的食物列表以及数量 |
 
 #### 返回示例
 
@@ -24,16 +26,9 @@
 
 ```json
 {
-	"status": "success",
-	"code": 2000,
-	"message": "获取成功",
-    "data": {
-        "sleep_record_id": 12,
-        "sleep_quality": "优质睡眠",
-        "sleep_duration": 480,
-        "bed_time": "2024-3-20 23:00:00",
-        "wake_time": "2024-3-21 07:00:00",
-    }
+    "status": "success",
+    "code": 2000,
+    "message": "成功",
 }
 ```
 
@@ -41,8 +36,8 @@
 
 ```json
 {
-	"status": "error",
-	"code": 4002,
-	"message": "记录失败，请稍后重试"
+    "status": "error",
+    "code": 4002,
+    "message": "失败"
 }
 ```

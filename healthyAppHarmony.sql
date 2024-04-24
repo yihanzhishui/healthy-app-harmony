@@ -1,5 +1,6 @@
 -- 创建 MySQL 数据库 healthy_DB
 -- 接下来的 SQL 语句仅适用于 MySQL 数据库
+DROP DATABASE IF EXISTS healthy_DB;
 CREATE DATABASE healthy_DB;
 
 -- 使用 healthy_DB 数据库
@@ -7,7 +8,7 @@ USE healthy_DB;
 
 
 -- 约定
--- 用户主键为 9 位数字
+-- 用户主键为 5 位数字
 
 
 -- 判断用户表是否已经存在，不存在则创建
@@ -82,6 +83,24 @@ CREATE TABLE IF NOT EXISTS food (
 );
 
 
+-- 判断推荐饮食搭配表是否已经存在，不存在则创建
+-- 搭配ID：主键、自增长、整数类型
+-- 食物ID：整数类型、外键，引用食物表的主键
+-- 食用数量：整数类型、不可为空
+-- 摄入热量：整数类型、不可为空
+-- 饮食类型：字符串类型、长度为 20、不可为空
+-- 创建时间：日期时间类型、不可为空
+CREATE TABLE IF NOT EXISTS recommended_diet_combination (
+    recommended_diet_combination_id INT AUTO_INCREMENT PRIMARY KEY,
+    food_id INT,
+    eat_quantity INT NOT NULL,
+    calories_intake INT NOT NULL,
+    diet_type VARCHAR(20) NOT NULL,
+    create_time DATETIME NOT NULL,
+    FOREIGN KEY (food_id) REFERENCES food(food_id)
+);
+
+
 -- 判断饮食记录表是否已经存在，不存在则创建
 -- 记录ID：主键、自增长、整数类型
 -- 用户ID：整数类型、外键，引用用户表的主键
@@ -115,6 +134,7 @@ CREATE TABLE IF NOT EXISTS diet_record (
 -- 卧床时间：整数类型，不可为空
 -- 睡眠时间：整数类型，不可为空
 -- 睡眠质量：字符串类型、长度为20、'优质睡眠'、'良好睡眠'、'一般睡眠'、'差睡眠'、不可为空
+-- 记录时间：日期时间类型、不可为空（表示这条记录是哪天的）
 -- 创建时间：日期时间类型、不可为空
 CREATE TABLE IF NOT EXISTS sleep_record (
     sleep_record_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -126,6 +146,7 @@ CREATE TABLE IF NOT EXISTS sleep_record (
     bed_time_duration INT NOT NULL,
     sleep_duration INT NOT NULL,
     sleep_quality VARCHAR(20) NOT NULL,
+    record_time DATETIME NOT NULL,
     create_time DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
@@ -254,8 +275,8 @@ CREATE TABLE IF NOT EXISTS exercise_plan (
 -- 计划表ID：整数类型、外键，引用减脂计划表的主键
 -- 方案名称：字符串类型、长度为20、不可为空
 -- 推荐摄入热量：整数类型、不可为空
--- 推荐膳食搭配：字符串类型、长度为200、不可为空
--- 推荐运动计划：字符串类型、长度为200、不可为空
+-- 饮食记录表 ID：整数类型、外键，引用饮食记录表的主键
+-- 运动计划表 ID：整数类型、外键，引用运动计划表的主键
 -- 创建时间：日期时间类型、不可为空
 CREATE TABLE IF NOT EXISTS ai_plan (
     ai_plan_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -263,11 +284,13 @@ CREATE TABLE IF NOT EXISTS ai_plan (
     fat_loss_plan_id INT,
     plan_name VARCHAR(20) NOT NULL,
     recommended_calories INT NOT NULL,
-    recommended_diet_combination VARCHAR(200) NOT NULL,
-    recommended_exercise_plan TEXT NOT NULL,
+    diet_record_id INT,
+    exercise_plan_id INT,
     create_time DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (fat_loss_plan_id) REFERENCES fat_loss_plan(plan_id)
+    FOREIGN KEY (fat_loss_plan_id) REFERENCES fat_loss_plan(plan_id),
+    FOREIGN KEY (diet_record_id) REFERENCES diet_record(diet_record_id),
+    FOREIGN KEY (exercise_plan_id) REFERENCES exercise_plan(exercise_plan_id)
 )
 
 
@@ -279,8 +302,6 @@ CREATE TABLE IF NOT EXISTS ai_plan (
 -- 音乐文件类型：子串串类型、长度为20、不可为空
 -- 音乐文件大小：浮点数类型、不可为空
 -- 音乐文件MD5：字符串类型、长度为32、不可为空
--- 音乐文件SHA1：字符串类型、长度为40、不可为空
--- 音乐文件SHA256：字符串类型、长度为64、不可为空
 -- 音乐专辑封面：字符串类型、长度为255、可为空
 -- 标签：字符串类型、长度为50、不可为空
 -- 分类：字符串类型、长度为 5、不可为空
@@ -294,8 +315,6 @@ CREATE TABLE IF NOT EXISTS music (
     music_file_type VARCHAR(20) NOT NULL,
     music_file_size FLOAT NOT NULL,
     music_file_md5 VARCHAR(32) NOT NULL,
-    music_file_sha1 VARCHAR(40) NOT NULL,
-    music_file_sha256 VARCHAR(64) NOT NULL,
     music_album_cover VARCHAR(255) NULL,
     tags VARCHAR(50) NOT NULL,
     category VARCHAR(5) NOT NULL,

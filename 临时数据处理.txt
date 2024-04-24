@@ -18,3 +18,74 @@ WAV|MP3|AAC|FLAC
 深睡提升|快速入睡|浅睡改善|减压放松|舒缓疗愈|唤醒晨间|日间小憩
 优质睡眠|良好睡眠|一般睡眠|差睡眠
 [.]/assets/avatar/[A-Za-z0-9]{10}\.(jpe?g|png|gif|bmp)$
+
+ 生成代码：
+请为我生成一份健康减脂的方案，包含饮食、运动和睡眠三方面。
+其中：
+饮食方面，请分别提供早、中、晚三餐的食物以及相应的食用数量、推荐摄入热量。
+运动方面，请提供一份包含室内跑步、室内健走、室内骑行、室外跑步、室外健走、室外骑行中一到两项的运动方案、推荐运动的时间区间、推荐运动时长（minutes）。
+睡眠方面，请提供一份包含入睡时间、起床时间、睡眠时长（minutes）的睡眠方案。
+请帮我生成一份详细的方案，并确保方案的合理性和可行性。
+
+生成代码时，请遵循以下规则：
+1. 使用JSON对象数据格式，确保方案的格式符合JSON标准。示例：
+    {
+        "diet": {
+            "breakfast": {
+                "food": "食物1",
+                "quantity": 1,
+                "calories": 1
+            },
+            "lunch": {
+                "food": "食物2",
+                "quantity": 2,
+                "calories": 2
+            },
+            "dinner": {
+                "food": "食物3",
+                "quantity": 3,
+                "calories": 3
+            }
+        },
+        "exercise": {
+            "indoor_running": {
+                "exercise_plan": "室内跑步方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            },
+            "indoor_walking": {
+                "exercise_plan": "室内健走方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            },
+            "indoor_cycling": {
+                "exercise_plan": "室内骑行方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            },
+            "outdoor_running": {
+                "exercise_plan": "室外跑步方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            },
+            "outdoor_walking": {
+                "exercise_plan": "室外健走方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            },
+            "outdoor_cycling": {
+                "exercise_plan": "室外骑行方案",
+                "time_of_day": "2024-01-01 00:00:00",
+                "duration": 180
+            }
+        },
+        "sleep": {
+            "sleep_time": "2024-01-01 00:00:00",
+            "wake_time": "2024-01-02 07:00:00",
+            "duration": 420
+        }
+
+    }
+2. 请确保方案的合理性和可行性。
+3. 生成数据时，只需要给出数据代码即可，无需提供任何解释或说明。
+4. 将生成结果格式化后放在代码块里。
