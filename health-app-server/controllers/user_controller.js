@@ -1,5 +1,9 @@
 // 导入数据库处理模块
 const db = require('../utils/database')
+// 导入获取验证模块
+const { getSmsVerificationCode, getEmailVerificationCode } = require('../controllers/verify_code_controller')
+
+//
 /**
  * 处理用户注册
  */

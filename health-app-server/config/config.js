@@ -1,3 +1,6 @@
+// 导入环境变量
+require('dotenv').config()
+
 /**
  * log4js 配置对象
  */
@@ -58,9 +61,31 @@ const sms_config = {
     timeout: 30,
 }
 
+/**
+ * 发件人邮箱服务配置对象
+ */
+const email_config = {
+    // 邮箱服务器地址
+    // host: 'smtp.qq.com',
+    service: 'qq',
+    // 邮箱服务器端口
+    port: 465,
+    // 是否开启安全连接
+    secure: false,
+    // 是否启用SSL
+    // secureConnetion: false,
+    // 邮箱用户名
+    auth: {
+        user: '321840565@qq.com',
+        // 邮箱密码
+        pass: process.env.qqemailkey,
+    },
+}
+
 // 导出配置对象
 module.exports = {
     log_config,
     db_config,
     sms_config,
+    email_config,
 }

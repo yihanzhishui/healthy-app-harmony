@@ -4,10 +4,14 @@ require('dotenv').config()
 // 导入日志模块
 const { logger_code_api: logger } = require('../utils/logger')
 
-// 导入短信验证码配置对象
-const { sms_config } = require('../config/config')
+// 导入邮箱验证码、短信验证码配置对象
+const { sms_config, email_config } = require('../config/config')
 
+// 导入腾讯云短信SDK
 const tencentcloud = require('tencentcloud-sdk-nodejs')
+
+// 导入 nodemailer
+const nodemailer = require('nodemailer')
 
 /**
  * 发送短信验证码
@@ -58,15 +62,51 @@ const sendSMSVerifyCode = async (phone, verify_code) => {
         SessionContext: '',
     }
 
-    // 通过client对象调用想要访问的接口，需要传入请求对象以及响应回调函数
-    client.SendSms(params, function (err, response) {
-        // 请求异常返回，打印异常信息
-        if (err) {
-            logger.error(err)
-            return
-        }
-        // TODO 请求正常返回，处理返回数据
+    return new Promise((resolve, reject) => {
+        // 通过client对象调用想要访问的接口，需要传入请求对象以及响应回调函数
+        client.SendSms(params, function (err, response) {
+            // 请求异常返回，打印异常信息
+            if (err) {
+                logger.error('发送验证码失败' + err.message)
+                reject(err)
+            }
+            // TODO 请求正常返回，处理返回数据
+        })
     })
 }
 
-module.exports = { sendSMSVerifyCode }
+/**
+ * 发送邮件验证码
+ * @param {string} email
+ * @param {string | number} verify_code
+ * @returns
+ */
+const sendEmailVerifyCode = async (email, verify_code) => {
+    const transporter = nodemailer.createTransport(email_config)
+
+    const mailOptions = {
+        from: email_config.auth.user,
+        to: email,
+        subject: '「健康方舟」验证码',
+        html: `<h1>「健康方舟」验证码：</h1>
+        <span style="color: red;font-size: 20px;font-weight: bold;">${verify_code}</span>，
+        如非本人操作，请忽略此邮件！`,
+    }
+
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                logger.error('邮件发送失败' + error.message)
+                reject(error)
+            } else {
+                logger.info('邮件发送成功')
+                resolve(info)
+            }
+        })
+    })
+}
+
+module.exports = {
+    sendSMSVerifyCode,
+    sendEmailVerifyCode,
+}
