@@ -4,7 +4,7 @@ require('dotenv').config()
 // 导入日志模块
 const { logger_code_api: logger } = require('../utils/logger')
 
-// 导入配置对象
+// 导入短信验证码配置对象
 const { sms_config } = require('../config/config')
 
 const tencentcloud = require('tencentcloud-sdk-nodejs')
