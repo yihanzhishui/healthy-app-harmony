@@ -1,4 +1,5 @@
 /node_modules
+/health-app-server/node_modules
 /.vscode
 /dist
 /out
