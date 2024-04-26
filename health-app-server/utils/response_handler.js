@@ -40,6 +40,7 @@ const send = (res, code, message, data = undefined) => {
     }
 
     res.send(response)
+    return
 }
 
 module.exports = { sendError, send }

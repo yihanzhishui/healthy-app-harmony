@@ -13,6 +13,7 @@ const log_config = {
         // 输出到控制台, 级别大于 info 追加到文件
         default: { appenders: ['file'], level: 'info' },
         database: { appenders: ['file'], level: 'info' },
+        redis: { appenders: ['file'], level: 'warn' },
         code_api: { appenders: ['file'], level: 'info' },
         user: { appenders: ['file'], level: 'info' },
         music: { appenders: ['file'], level: 'info' },
@@ -82,10 +83,31 @@ const email_config = {
     },
 }
 
+/**
+ * token 相关配置
+ */
+const token_config = {
+    // token密钥
+    secret: 'healthy_token',
+    // token有效时长
+    expiresIn: '48h',
+}
+
+/**
+ * redis 配置对象
+ */
+const redis_config = {
+    host: '127.0.0.1', // Redis 服务器地址
+    port: 6379, // Redis 服务器端口
+    password: '', // 如果设置了 Redis 密码，请提供
+}
+
 // 导出配置对象
 module.exports = {
     log_config,
     db_config,
     sms_config,
     email_config,
+    token_config,
+    redis_config,
 }

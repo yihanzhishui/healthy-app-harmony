@@ -14,14 +14,16 @@ const {
 } = require('../utils/form_validate')
 
 // 导入用户控制器
-const userController = require('../controllers/user_controller')
+const { register, loginBySMSCode, loginByEmailCode, loginByPassword } = require('../controllers/user_controller')
 
 // 注册用户
 
-router.post('/register', userController.register)
+router.post('/register', joiValidator(registerSchema), register)
 
-// 登录
-router.post('/login', joiValidator(loginBySMSCodeSchema), userController.loginBySMSCode)
+/**
+ * 使用短信验证码登录
+ */
+router.post('/login_by_sms_verification_code', joiValidator(loginBySMSCodeSchema), loginBySMSCode)
 
 // 导出路由实例
 module.exports = router

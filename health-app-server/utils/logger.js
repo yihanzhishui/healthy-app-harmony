@@ -9,6 +9,7 @@ log4js.configure(log_config)
 
 const logger_info = log4js.getLogger()
 const logger_db = log4js.getLogger('database')
+const logger_redis = log4js.getLogger('redis')
 const logger_code_api = log4js.getLogger('code_api')
 const logger_user = log4js.getLogger('user')
 const logger_music = log4js.getLogger('music')
@@ -19,6 +20,7 @@ const logger_sport = log4js.getLogger('sport')
 module.exports = {
     logger_info,
     logger_db,
+    logger_redis,
     logger_code_api,
     logger_user,
     logger_music,
