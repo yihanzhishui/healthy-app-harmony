@@ -4,3 +4,4 @@
 /dist
 /out
 /health-app-server/.env
+/health-app-server/logs

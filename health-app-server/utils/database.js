@@ -1,3 +1,6 @@
+// 导入日志记录模块
+const { logger_db: logger } = require('./logger')
+
 // 导入文件读写模块
 const fs = require('fs')
 
@@ -17,12 +20,12 @@ db.getConnection((err, connection) => {
     if (err) {
         fs.appendFile('./error.log', `${new Date().toLocaleString()}数据库连接失败\n`, (err) => {
             if (err) {
-                console.log('写入失败')
+                logger.error('写入失败')
             }
         })
         return
     }
-    console.log('数据库连接成功')
+    logger.info(`数据库 ${db_config.database} 连接成功`)
     return
 })
 // 导出连接池

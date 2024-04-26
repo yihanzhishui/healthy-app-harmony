@@ -21,6 +21,11 @@ app.use(bodyParser.urlencoded({ extended: false }))
 const userRouter = require('./routes/user')
 app.use('/user', userRouter)
 
+// 导入错误级别中间件
+const { sendError } = require('./utils/response_handler')
+// 使用中间件
+app.use(sendError)
+
 app.listen(port, () => {
-    logger.info(`Server is running at http://localhost:${port}`)
+    logger.info(`服务器运行在 http://localhost:${port}`)
 })

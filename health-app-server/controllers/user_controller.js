@@ -1,30 +1,23 @@
 // 导入数据库处理模块
 const db = require('../utils/database')
-// 导入获取验证模块
+// 导入获取验证码模块
 const { getSmsVerificationCode, getEmailVerificationCode } = require('../controllers/verify_code_controller')
+// 导入发送响应模块
+const { send } = require('../utils/response_handler')
 
 //
 /**
  * 处理用户注册
  */
-const register = (req, res) => {
-    // 检测账号是否已存在
-    const { username, password } = req.body
-    const sql = `SELECT * FROM user WHERE username='${username}'`
-}
+const register = (req, res) => {}
 
 /**
- * 处理用户登录
+ * 处理短信验证码登录
  */
-const login = (req, res) => {
-    console.log(req.body)
-    res.send({
-        message: '登录成功',
-        code: 2000,
-    })
-}
+
+const loginBySMSCode = (req, res) => {}
 
 module.exports = {
     register,
-    login,
+    loginBySMSCode,
 }
