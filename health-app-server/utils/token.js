@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken')
-const expressJwt = require('express-jwt')
 const { redis_config } = require('../config/config')
 const { logger_redis: logger } = require('./logger')
 
@@ -15,7 +14,6 @@ class TokenManager {
         })
 
         this.client.on('error', (error) => {
-            console.log('#####')
             logger.error('Redis 连接错误:', error.message)
             // 处理连接错误
             this.catchError(error)
@@ -23,6 +21,7 @@ class TokenManager {
     }
 
     catchError(error) {
+        console.log('TOKEN$$$$$$$')
         logger.error('发生错误:', error.message)
         throw error
     }
