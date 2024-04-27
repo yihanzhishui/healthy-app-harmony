@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f5f5f5;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                max-width: 600px;
+                margin: 50px auto;
+                padding: 30px;
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+                color: #007bff;
+            }
+            p {
+                line-height: 1.6;
+            }
+            .code-box {
+                background-color: #007bff;
+                color: #fff;
+                display: inline-block;
+                padding: 10px 20px;
+                font-weight: bold;
+                border-radius: 5px;
+                margin-top: 20px;
+            }
+            .action {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 5px;
+                margin-top: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>欢迎来到[您的网站/应用名称]</h1>
+            <p>您好，<strong>${email}</strong>,</p>
+            <p>感谢您选择我们！为了保障您的账户安全，以下是您的登录验证码，请妥善保管：</p>
+            <div class="code-box">${verify_code}</div>
+
+            <p>此验证码有效期为10分钟，请在此时间内完成验证操作。如非本人操作，请忽略此邮件。</p>
+
+            <p>祝您使用愉快！</p>
+            <p>敬上，<br />「健康方舟」</p>
+        </div>
+    </body>
+</html>

@@ -1,78 +1,56 @@
 // 引入环境变量
 require('dotenv').config()
-
-// 导入日志模块
 const { logger_code_api: logger } = require('../utils/logger')
-
-// 导入邮箱验证码、短信验证码配置对象
 const { sms_config, email_config } = require('../config/config')
-
+const tencentcloud = require('tencentcloud-sdk-nodejs-sms')
+const SmsClient = tencentcloud.sms.v20210111.Client
 // 导入腾讯云短信SDK
-const tencentcloud = require('tencentcloud-sdk-nodejs')
-
+const Qcloudsms = require('qcloudsms_js')
 // 导入 nodemailer
 const nodemailer = require('nodemailer')
+const redis = require('./redis_manager')
 
 /**
  * 发送短信验证码
  * @param {string | number} phone
  * @param {string | number} verify_code
  */
-const sendSMSVerifyCode = async (phone, verify_code) => {
-    // 导入对应产品模块的client models
-    const smsClient = tencentcloud.sms.v20210111.Client
-
-    /* 实例化要请求产品(以sms为例)的client对象 */
-    const client = new smsClient({
+const sendSMSVerifyCode = (phone, verify_code) => {
+    const clientConfig = {
         credential: {
-            /* TODO 必填：腾讯云账户密钥对secretId，secretKey。
-             * 这里采用的是从环境变量读取的方式，需要在环境变量中先设置这两个值。
-             * SecretId、SecretKey 查询: https://console.cloud.tencent.com/cam/capi */
             secretId: process.env.secretId,
             secretKey: process.env.secretKey,
         },
-        /* 必填：地域信息，可以直接填写字符串ap-guangzhou*/
-        region: sms_config.region,
-        /* 非必填:
-         * 客户端配置对象，可以指定超时时间等配置 */
+        region: 'ap-guangzhou',
         profile: {
-            /* SDK默认用TC3-HMAC-SHA256进行签名，非必要请不要修改这个字段 */
-            signMethod: 'HmacSHA256',
             httpProfile: {
-                /* SDK默认使用POST方法 */
-                reqMethod: sms_config.method,
-                /* SDK有默认的超时时间，非必要请不要进行调整 */
-                // reqTimeout: sms_config.timeout,
-                endpoint: sms_config.endpoint,
+                endpoint: 'sms.tencentcloudapi.com',
             },
         },
-    })
-
-    /* 请求参数，根据调用的接口和实际情况，可以进一步设置请求参数
-     * 属性可能是基本类型，也可能引用了另一个数据结构 */
-    const params = {
-        SmsSdkAppId: process.env.AppId,
-        SignName: sms_config.SignName,
-        TemplateId: process.env.TemplateID,
-        TemplateParamSet: [`${verify_code}`],
-        /* 下发手机号码，采用 e.164 标准，+[国家或地区码][手机号]
-         * 示例如：+8613711112222， 其中前面有一个+号 ，86为国家码，13711112222为手机号，最多不要超过200个手机号*/
-        PhoneNumberSet: [`+86${phone}`],
-        /* 用户的 session 内容（无需要可忽略）: 可以携带用户侧 ID 等上下文信息，server 会原样返回 */
-        SessionContext: '',
     }
 
-    return new Promise((resolve, reject) => {
-        // 通过client对象调用想要访问的接口，需要传入请求对象以及响应回调函数
-        client.SendSms(params, function (err, response) {
-            // 请求异常返回，打印异常信息
-            if (err) {
-                logger.error('发送验证码失败' + err.message)
-                reject(err)
+    // 实例化要请求产品的client对象,clientProfile是可选的
+    const client = new SmsClient(clientConfig)
+    const params = {
+        PhoneNumberSet: [`86${phone}`],
+        SmsSdkAppId: process.env.AppId,
+        SignName: process.env.SignName,
+        TemplateId: process.env.TemplateID,
+        TemplateParamSet: [verify_code.toString()],
+    }
+    return client.SendSms(params).then(
+        async (data) => {
+            try {
+                await redis.set(phone, verify_code)
+            } catch (error) {
+                logger.error('Redis 存储 Token 失败' + error.message)
             }
-            // TODO 请求正常返回，处理返回数据
-        })
-    })
+            logger.info('短信发送成功', data)
+        },
+        (err) => {
+            logger.error('验证码发送失败', err.message)
+        }
+    )
 }
 
 /**
@@ -88,21 +66,84 @@ const sendEmailVerifyCode = async (email, verify_code) => {
         from: email_config.auth.user,
         to: email,
         subject: '「健康方舟」验证码',
-        html: `<h1>「健康方舟」验证码：</h1>
-        <span style="color: red;font-size: 20px;font-weight: bold;">${verify_code}</span>，
-        如非本人操作，请忽略此邮件！`,
+        html: `<!DOCTYPE html>
+        <html lang="zh">
+            <head>
+                <meta charset="UTF-8" />
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f5f5f5;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .container {
+                        max-width: 600px;
+                        margin: 50px auto;
+                        padding: 30px;
+                        background-color: #fff;
+                        border-radius: 10px;
+                        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                    }
+                    h1 {
+                        font-size: 24px;
+                        margin-bottom: 20px;
+                        color: #007bff;
+                    }
+                    p {
+                        line-height: 1.6;
+                    }
+                    .code-box {
+                        background-color: #007bff;
+                        color: #fff;
+                        display: inline-block;
+                        padding: 10px 20px;
+                        font-weight: bold;
+                        border-radius: 5px;
+                        margin-top: 20px;
+                    }
+                    .action {
+                        display: inline-block;
+                        padding: 10px 20px;
+                        background-color: #007bff;
+                        color: #fff;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin-top: 30px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>欢迎来到「健康方舟」</h1>
+                    <p>您好，<strong>${email}</strong>,</p>
+                    <p>感谢您选择我们！为了保障您的账户安全，以下是您的登录验证码，请妥善保管：</p>
+                    <div class="code-box">${verify_code}</div>
+        
+                    <p>此验证码有效期为10分钟，请在此时间内完成验证操作。如非本人操作，请忽略此邮件。</p>
+        
+                    <p>祝您使用愉快！</p>
+                    <p>敬上，<br />「健康方舟」</p>
+                </div>
+            </body>
+        </html>
+        `,
     }
 
-    return new Promise((resolve, reject) => {
-        transporter.sendMail(mailOptions, function (error, info) {
-            if (error) {
-                logger.error('邮件发送失败' + error.message)
-                reject(error)
-            } else {
-                logger.info('邮件发送成功')
-                resolve(info)
+    return transporter.sendMail(mailOptions, async (error, info) => {
+        if (error) {
+            logger.error('邮件发送失败' + error.message)
+        } else {
+            try {
+                await redis.set(email, verify_code)
+                logger.info('邮件发送成功', info)
+                return
+            } catch (error) {
+                logger.error('Redis 存储 Token 失败' + error.message)
+                return
             }
-        })
+        }
     })
 }
 

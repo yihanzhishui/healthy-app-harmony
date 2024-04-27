@@ -18,11 +18,15 @@ const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // 导入并使用用户路由模块
-const userRouter = require('./routes/user')
+const userRouter = require('./routes/user_login_reg')
 app.use('/user', userRouter)
 
+// 导入并使用获取验证码路由模块
+const verifyCodeRouter = require('./routes/verify_code')
+app.use('/code', verifyCodeRouter)
+
 // 导入错误级别中间件
-const { sendError } = require('./utils/response_handler')
+const { sendError } = require('./middleware/response_handler')
 // 使用中间件
 app.use(sendError)
 

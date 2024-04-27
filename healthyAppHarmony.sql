@@ -19,14 +19,16 @@ USE healthy_DB;
 -- 密码：字符串类型、长度为 50、不可为空
 -- 密码加密盐：字符串类型、长度为 8、不可为空
 -- 头像：字符串类型、长度为 255、可为空
+-- 是否已注销：布尔类型、取值为 '0' 或 '1'，分别表示'未注销'、'已注销'，不可为空
 CREATE TABLE IF NOT EXISTS user (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(20) NULL,
     phone VARCHAR(20) NULL,
     email VARCHAR(50) NULL,
-    password VARCHAR(50) NOT NULL,
-    salt VARCHAR(8) NOT NULL,
-    avatar VARCHAR(255) NULL
+    password VARCHAR(100) NOT NULL,
+    salt VARCHAR(100) NOT NULL,
+    avatar Text NULL,
+    is_deleted BOOLEAN NOT NULL
 );
 
 
