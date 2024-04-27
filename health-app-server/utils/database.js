@@ -23,7 +23,6 @@ db.getConnection((err, connection) => {
                 logger.error('写入失败')
             }
         })
-        logger.info(`数据库 ${db_config.database} 连接失败`)
         return
     }
     logger.info(`数据库 ${db_config.database} 连接成功`)

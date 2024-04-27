@@ -1,6 +1,6 @@
 const Joi = require('joi')
-const { logger_user, logger_redis } = require('../utils/logger')
-const { ValidationError, RedisError } = require('../utils/custom_error')
+const { logger_user: logger } = require('./logger')
+const { ValidationError } = require('./custom_error')
 /**
  * 错误级别中间件
  * @param {Response} res 响应对象
@@ -10,20 +10,12 @@ const { ValidationError, RedisError } = require('../utils/custom_error')
 const sendError = (err, req, res, next) => {
     // 记录日志
     // 如果错误属于表单验证错误，则返回4000
+    logger.error(err.message)
     if (err instanceof ValidationError) {
-        logger_user.error(err.message)
         send(res, 4000, err.message)
         return
     }
-    // redis 错误
-    if (err instanceof RedisError) {
-        logger_redis.error(err.message)
-        send(res, 5000, '服务器内部错误')
-        return
-    }
     // TODO 对其他错误进行处理
-    send(res, 5000, '服务器内部错误')
-    return
 }
 
 /**

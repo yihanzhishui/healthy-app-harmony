@@ -91,14 +91,14 @@ const token_config = {
     secret: 'healthy_token',
     // token有效时长
     expiresIn: '48h',
-    TTL: 48 * 60 * 60 * 1000,
 }
 
 /**
  * redis 配置对象
  */
 const redis_config = {
-    url: 'redis://localhost:6379', // Redis 服务器地址
+    host: '127.0.0.1', // Redis 服务器地址
+    port: 6379, // Redis 服务器端口
     password: '', // 如果设置了 Redis 密码，请提供
 }
 

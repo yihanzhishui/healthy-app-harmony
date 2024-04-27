@@ -21,7 +21,6 @@
     "log4js": "^6.9.1",
     "mysql2": "^3.9.7",
     "nodemailer": "^6.9.13",
-    "qcloudsms_js": "^0.1.1",
     "redis": "^4.6.13",
     "tencentcloud-sdk-nodejs": "^4.0.842"
   },
