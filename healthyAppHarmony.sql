@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS user (
     email VARCHAR(50) NULL,
     password VARCHAR(100) NOT NULL,
     salt VARCHAR(100) NOT NULL,
-    avatar Text NULL,
+    avatar MEDIUMTEXT NULL,
     is_deleted BOOLEAN NOT NULL
 );
 
@@ -75,12 +75,14 @@ CREATE TABLE IF NOT EXISTS user_info (
 -- 食物名称：字符串类型、长度为 20、不可为空
 -- 食物图片：字符串类型、长度为 255、可为空
 -- 食物热量：整数类型、不可为空
+-- 食物标签：字符串类型，长度20，不可为空
 -- 创建时间：日期时间类型、不可为空
 CREATE TABLE IF NOT EXISTS food (
     food_id INT AUTO_INCREMENT PRIMARY KEY,
     food_name VARCHAR(20) NOT NULL,
     food_image VARCHAR(255) NULL,
     calories INT NOT NULL,
+    food_tags VARCHAR(20) NOT NULL,
     create_time DATETIME NOT NULL
 );
 

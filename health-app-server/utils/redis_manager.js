@@ -1,6 +1,5 @@
 const { createClient } = require('redis')
 const { promisify } = require('util')
-const { redis_config } = require('../config/config')
 const { logger_redis: logger } = require('./logger')
 
 const redisClient = createClient({
@@ -12,7 +11,7 @@ const redisClient = createClient({
 })()
 
 module.exports = {
-    set: async (key, value, timeout = '60000') => {
+    set: async (key, value, timeout = 60000) => {
         try {
             return await redisClient.set(key, value, { EX: timeout })
         } catch (error) {

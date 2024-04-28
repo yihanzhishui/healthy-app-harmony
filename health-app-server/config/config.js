@@ -99,7 +99,8 @@ const token_config = {
  */
 const redis_config = {
     url: 'redis://localhost:6379', // Redis 服务器地址
-    password: '', // 如果设置了 Redis 密码，请提供
+    password: '', // 如果设置了 Redis 密码，请提供,
+    local_redis_path: 'D:/Environment/Redis/redis-server.exe',
 }
 
 // 导出配置对象

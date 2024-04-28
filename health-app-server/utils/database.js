@@ -5,7 +5,7 @@ const { logger_db: logger } = require('./logger')
 const fs = require('fs')
 
 // 导入并配置 mysql2 模块
-const mysql = require('mysql2')
+const mysql = require('mysql2/promise')
 
 // 导入数据库配置对象
 const { db_config } = require('../config/config')

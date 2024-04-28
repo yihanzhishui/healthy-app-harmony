@@ -1,10 +1,6 @@
 // 导入express
 const express = require('express')
-
-// 创建路由实例
 const router = express.Router()
-
-// 导入表单验证规则
 const {
     loginBySMSCodeSchema,
     loginByEmailCodeSchema,
@@ -12,16 +8,15 @@ const {
     registerSchema,
     deleteUserSchema,
     joiValidator,
-} = require('../middleware/form_validate')
-
-// 导入用户控制器
+} = require('../../middleware/form_validate')
 const {
     register,
     loginBySMSCode,
     loginByEmailCode,
     loginByPassword,
     logout,
-} = require('../controllers/user_controller')
+    deleteUser,
+} = require('../../controllers/user_controller')
 
 /**
  * 用户注册
@@ -52,12 +47,12 @@ router.post('/login_by_password', joiValidator(loginByPasswordSchema), loginByPa
 /**
  * 退出登录
  */
-router.post('/logout', logout)
+router.get('/logout', logout)
 
 /**
  * 注销账号
  */
-router.post('/delete_user', joiValidator(deleteUserSchema), logout)
+router.delete('/delete_user', joiValidator(deleteUserSchema), deleteUser)
 
 // 导出路由实例
 module.exports = router

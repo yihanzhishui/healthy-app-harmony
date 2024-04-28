@@ -89,3 +89,90 @@ WAV|MP3|AAC|FLAC
 2. 请确保方案的合理性和可行性。
 3. 生成数据时，只需要给出数据代码即可，无需提供任何解释或说明。
 4. 将生成结果格式化后放在代码块里。
+
+
+数据生成
+请帮我生成一份这样的数据：
+1. 常规的食物 30 条
+2. 每条数据格式如下
+    {
+        "id": 1,
+        "food_name": "食物名称",
+        "food_image": base64编码的图片数据,
+        "calories":200,
+        "food_tags": 从这些数据中随机选取一到三个作为食物标签：主食、果蔬、肉蛋奶、坚果、其他
+    }
+3. 请确保数据格式符合要求，并确保数据的可行性。
+4. 将生成结果格式化后放在代码块里。
+[
+    {
+        "id": 1,
+        "food_name": "番茄炒蛋",
+        "food_image": "image_data_placeholder",
+        "calories": 150,
+        "food_tags": "主食,肉蛋奶"
+    },
+    {
+        "id": 2,
+        "food_name": "牛肉面",
+        "food_image": "image_data_placeholder",
+        "calories": 350,
+        "food_tags": "主食,肉蛋奶"
+    },
+    {
+        "id": 3,
+        "food_name": "清蒸鲈鱼",
+        "food_image": "image_data_placeholder",
+        "calories": 290,
+        "food_tags": "肉蛋奶,果蔬"
+    },
+    {
+        "id": 4,
+        "food_name": "凉拌黄瓜",
+        "food_image": "image_data_placeholder",
+        "calories": 80,
+        "food_tags": "果蔬"
+    },
+    {
+        "id": 5,
+        "food_name": "烤鸡翅",
+        "food_image": "image_data_placeholder",
+        "calories": 220,
+        "food_tags": "肉蛋奶,坚果"
+    },
+    {
+        "id": 6,
+        "food_name": "紫菜蛋汤",
+        "food_image": "image_data_placeholder",
+        "calories": 90,
+        "food_tags": "主食,果蔬"
+    },
+    {
+        "id": 7,
+        "food_name": "香蕉牛奶",
+        "food_image": "image_data_placeholder",
+        "calories": 180,
+        "food_tags": "果蔬,肉蛋奶"
+    },
+    {
+        "id": 8,
+        "food_name": "炒土豆丝",
+        "food_image": "image_data_placeholder",
+        "calories": 120,
+        "food_tags": "主食,果蔬"
+    },
+    {
+        "id": 9,
+        "food_name": "五香牛肉干",
+        "food_image": "image_data_placeholder",
+        "calories": 260,
+        "food_tags": "肉蛋奶,坚果"
+    },
+    {
+        "id": 10,
+        "food_name": "绿豆糕",
+        "food_image": "image_data_placeholder",
+        "calories": 110,
+        "food_tags": "其他,果蔬"
+    }
+]

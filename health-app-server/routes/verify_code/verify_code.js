@@ -5,7 +5,7 @@ const express = require('express')
 const router = express.Router()
 
 // 导入验证码处理模块
-const { getSmsVerificationCode, getEmailVerificationCode } = require('../controllers/verify_code_controller')
+const { getSmsVerificationCode, getEmailVerificationCode } = require('../../controllers/verify_code_controller')
 
 // 获取手机验证码
 router.get('/get_sms_verification_code', getSmsVerificationCode)

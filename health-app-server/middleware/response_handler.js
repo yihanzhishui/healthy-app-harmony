@@ -22,6 +22,7 @@ const sendError = (err, req, res, next) => {
         return
     }
     // TODO 对其他错误进行处理
+    logger_user.error('请求出错: ' + err.message)
     send(res, 5000, '服务器内部错误')
     return
 }
