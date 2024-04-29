@@ -7,6 +7,7 @@ const {
     changeAvatarSchema,
     bindEmailSchema,
     bindHuaweiAccountSchema,
+    updateUserBodyInfoSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
@@ -15,6 +16,7 @@ const {
     changeAvatar,
     bindEmail,
     bindHuaweiAccount,
+    updateUserBodyInfo,
 } = require('../../controllers/user_controller')
 
 /**
@@ -42,6 +44,11 @@ router.put('/binding_email', joiValidator(bindEmailSchema), bindEmail)
  */
 // TODO
 // router.post('/binding_huawei_account', joiValidator(bindHuaweiAccountSchema), bindHuaweiAccount)
+
+/**
+ * 修改身高、体重、生日、性别
+ */
+router.put('/update_user_body_info', joiValidator(updateUserBodyInfoSchema), updateUserBodyInfo)
 
 // 导出路由实例
 module.exports = router

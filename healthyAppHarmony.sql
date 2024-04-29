@@ -16,6 +16,7 @@ USE healthy_DB;
 -- 用户名：字符串类型、长度为 20、可为空
 -- 电话：字符串类型、长度为 11、可为空
 -- 邮箱：字符串类型、长度为 50、可为空
+-- 华为账户： 字符串类型、长度为 255、可为空
 -- 密码：字符串类型、长度为 50、不可为空
 -- 密码加密盐：字符串类型、长度为 8、不可为空
 -- 头像：字符串类型、长度为 255、可为空
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS user (
     username VARCHAR(20) NULL,
     phone VARCHAR(20) NULL,
     email VARCHAR(50) NULL,
+    huawei_account VARCHAR(255) NULL,
     password VARCHAR(100) NOT NULL,
     salt VARCHAR(100) NOT NULL,
     avatar MEDIUMTEXT NULL,
@@ -32,40 +34,22 @@ CREATE TABLE IF NOT EXISTS user (
 );
 
 
--- 判断用户账户绑定第三方账号表是否存在，如果不存在则创建
--- 绑定ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 邮箱：字符串类型、长度为 50、可为空
--- 华为账号：字符串类型、长度为 50、可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS user_account_binding (
-    user_account_binding_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    email VARCHAR(50) NULL,
-    huawei_account VARCHAR(50) NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
 -- 判断用户信息表是否已经存在，不存在则创建
--- 用户ID：整数类型、外键，引用用户表的主键
+-- 用户ID：整数类型、主键、外键，引用用户表的主键
 -- 身高：浮点数类型、可为空
 -- 体重：浮点数类型、可为空
--- 年龄：整数类型、可为空
 -- 生日：日期时间类型、可为空
 -- 性别：布尔类型，取值为 '0' 或 '1'，分别表示'男'、'女'，可为空
 -- 创建时间：日期时间类型、不可为空
 -- 最近修改时间：日期时间类型、不可为空
 CREATE TABLE IF NOT EXISTS user_info (
-    user_id INT,
+    user_id INT PRIMARY KEY,
     height FLOAT NULL,
     weight FLOAT NULL,
-    age INT NULL,
     birthday DATETIME NULL,
     gender BOOLEAN NULL,
     create_time DATETIME NOT NULL,
-    update_time DATETIME NOT NULL,
+    update_time  DATETIME NOT NULL,
     FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
 
@@ -89,18 +73,21 @@ CREATE TABLE IF NOT EXISTS food (
 
 -- 判断推荐饮食搭配表是否已经存在，不存在则创建
 -- 搭配ID：主键、自增长、整数类型
+-- 用户ID：整数类型、外键，引用用户表的主键
 -- 食物ID：整数类型、外键，引用食物表的主键
 -- 食用数量：整数类型、不可为空
 -- 摄入热量：整数类型、不可为空
 -- 饮食类型：字符串类型、长度为 20、不可为空
 -- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS recommended_diet_combination (
-    recommended_diet_combination_id INT AUTO_INCREMENT PRIMARY KEY,
-    food_id INT,
+CREATE TABLE IF NOT EXISTS recommended_diet (
+    recommended_diet_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    food_id INT NOT NULL,
     eat_quantity INT NOT NULL,
     calories_intake INT NOT NULL,
     diet_type VARCHAR(20) NOT NULL,
     create_time DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
     FOREIGN KEY (food_id) REFERENCES food(food_id)
 );
 

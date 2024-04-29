@@ -1,4 +1,4 @@
-const db = require('../utils/database')
+const { db, releaseConnection } = require('../utils/database')
 const { sendError, send } = require('../middleware/response_handler')
 const { logger_db: logger } = require('../utils/logger')
 
@@ -14,24 +14,28 @@ const recordSleep = async (req, res) => {
         wake_time,
         wake_up_interval
     )
+
     const connection = await db.getConnection()
-    // 开始事务
     try {
         await connection.beginTransaction()
-        // 查询数据库中是否已经存在该用户
-        let sql = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
-        ;[results] = await connection.query(sql, [user_id])
 
-        // 用户不存在
-        if (results.length === 0) {
+        const checkUserSql = `SELECT COUNT(*) AS user_exists FROM user WHERE user_id = ? AND is_deleted = '0'`
+        const [[userExistsResult]] = await connection.query(checkUserSql, [user_id])
+
+        if (!userExistsResult.user_exists) {
+            await connection.rollback()
             send(res, 4003, '用户不存在')
             return
         }
 
-        // 用户存在，尝试插入睡眠记录
-        sql = `INSERT INTO sleep_record (user_id, bed_time, sleep_interval, wake_time, wake_up_interval, bed_time_duration, sleep_duration,
-            sleep_quality, sleep_time, wake_up_time, record_time, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`
-        let params = [
+        const insertSql = `
+            INSERT INTO sleep_record (
+                user_id, bed_time, sleep_interval, wake_time, wake_up_interval, 
+                bed_time_duration, sleep_duration, sleep_quality, sleep_time, 
+                wake_up_time, record_time, create_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        `
+        const insertParams = [
             user_id,
             bed_time,
             sleep_interval,
@@ -44,28 +48,51 @@ const recordSleep = async (req, res) => {
             wake_up_time,
             record_time,
         ]
-        ;[results] = await connection.query(sql, params)
 
-        if (results.affectedRows !== 1) {
-            // 更新影响行数不为1，事务需要回滚
+        const [insertResult] = await connection.query(insertSql, insertParams)
+
+        if (insertResult.affectedRows !== 1) {
             await connection.rollback()
-            logger.error(`用户 ${user_id} 新增睡眠记录失败:` + error.message)
+            logger.error(`用户 ${user_id} 新增睡眠记录失败`)
             send(res, 5001, '新增睡眠记录失败')
-            connection.release() // 释放连接
             return
         }
 
-        // 提交事务
         await connection.commit()
-        connection.release() // 释放连接
         logger.info(`用户 ${user_id} 新增睡眠记录成功`)
-        send(res, 2000, '新增记录成功', params)
+
+        // 封装响应数据为对象
+        const responseData = {
+            status: 'success',
+            code: 2000,
+            message: '新增记录成功',
+            data: {
+                insertedRecord: {
+                    user_id,
+                    bed_time,
+                    sleep_interval,
+                    wake_time,
+                    wake_up_interval,
+                    bed_time_duration,
+                    sleep_duration,
+                    sleep_quality,
+                    sleep_time,
+                    wake_up_time,
+                    record_time,
+                    create_time: new Date().toISOString(),
+                },
+            },
+        }
+
+        send(res, responseData.code, responseData.message, responseData.data)
     } catch (error) {
-        // 捕获到任何异常，事务回滚
         await connection.rollback()
-        logger.error('数据库操作出现错误：' + error.message)
-        send(res, 4003, '服务器内部错误')
-        connection.release() // 释放连接
+        logger.error('数据库操作出现错误:', error)
+        send(res, 5001, '服务器内部错误')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
     }
 }
 
@@ -74,39 +101,63 @@ const recordSleep = async (req, res) => {
  * @param {number} num 获取几条
  */
 const getSleepRecord = async (req, res) => {
-    // 获取几条数据
-    const number = req.number
     const user_id = req.body.user_id
+    const number = req.number || 7 // 默认获取本周
     const connection = await db.getConnection()
+
     try {
-        // 开始事务
-        await connection.beginTransaction()
-        let sql = `SELECT * FROM sleep_record WHERE user_id = ? ORDER BY record_time DESC LIMIT ?`
-        ;[results] = await connection.query(sql, [user_id, number])
+        let startDateStr
+        if (number === 1) {
+            // 查询当天记录
+            const today = new Date()
+            startDateStr = today.toISOString().split('T')[0]
+        } else {
+            startDateStr = getStartOfWeekStr()
+        }
+
+        let sql = `SELECT 
+            *, 
+            DATE_FORMAT(bed_time, '%Y-%m-%d %H:%i:%s') AS formatted_bed_time, 
+            DATE_FORMAT(wake_time, '%Y-%m-%d %H:%i:%s') AS formatted_wake_time,
+            DATE_FORMAT(record_time, '%Y-%m-%d %H:%i:%s') AS formatted_sleep_time,
+            DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS formatted_create_time
+            FROM sleep_record 
+            WHERE user_id = ? AND create_time >= ?
+            ORDER BY record_time DESC 
+            LIMIT ?`
+
+        // 如果number为1，只获取一条记录；否则获取本周所有记录
+        const limit = number === 1 ? 1 : number
+        let [results] = await connection.query(sql, [user_id, startDateStr, limit])
         if (results) {
-            // 将results结果中的iso时间格式转化为 yyyy-MM-dd HH:mm:ss 格式，将分钟转化成{hour: 0, minute: 0}格式
             results.forEach((result) => {
-                result.bed_time = result.bed_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                result.wake_time = result.wake_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                result.sleep_time = result.record_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                result.wake_up_time = result.create_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                result.record_time = result.create_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
-                result.create_time = result.create_time.toISOString().replace(/T/, ' ').replace(/\..+/, '')
+                result.bed_time = result.formatted_bed_time
+                result.wake_time = result.formatted_wake_time
+                result.sleep_time = result.formatted_sleep_time // 确认这个字段是否需要，SQL中未明确对应字段
+                result.wake_up_time = result.formatted_create_time // 确保字段名正确
+                result.record_time = result.formatted_create_time
+                result.create_time = result.formatted_create_time
                 result.bed_time_duration = convertMinutesToTimeObject(result.bed_time_duration)
                 result.sleep_duration = convertMinutesToTimeObject(result.sleep_duration)
                 result.wake_up_interval = convertMinutesToTimeObject(result.wake_up_interval)
+                // 删除不再需要的格式化字段，避免泄露不必要的信息
+                delete result.formatted_bed_time
+                delete result.formatted_wake_time
+                delete result.formatted_sleep_time
+                delete result.formatted_create_time
             })
         }
-        await connection.commit()
-        connection.release() // 释放连接
-        logger.info(`用户 ${user_id} 获取睡眠记录成功`)
-        send(res, 2000, '获取睡眠记录成功', results)
+
+        let message = number === 1 ? '获取当天睡眠记录成功' : '获取本周睡眠记录成功'
+        logger.info(`用户 ${user_id} ${message}`)
+        send(res, 2000, message, results)
     } catch (error) {
-        // 捕获到任何异常，事务回滚
-        await connection.rollback()
         logger.error('数据库操作出现错误：' + error.message)
         send(res, 5001, '服务器内部错误')
-        connection.release() // 释放连接
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
     }
 }
 
@@ -184,6 +235,18 @@ const convertMinutesToTimeObject = (minutes) => {
         hours: hours,
         minutes: remainingMinutes,
     }
+}
+
+/**
+ * 动态计算本周一的日期
+ * @returns {string} 本周一的日期字符串
+ */
+const getStartOfWeekStr = () => {
+    const today = new Date()
+    const diff = today.getDay() - 1 // getDay()返回的是0(周日)到6(周六)，我们需要周一，所以减1
+    const startOfWeek = new Date(today.setDate(today.getDate() - diff)) // 设置日期为本周一
+    const startOfWeekStr = startOfWeek.toISOString().split('T')[0] // 转换为ISO格式日期字符串用于SQL查询
+    return startOfWeekStr
 }
 
 module.exports = {

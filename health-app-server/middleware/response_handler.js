@@ -47,7 +47,6 @@ const send = (res, code, message, data = undefined) => {
         message: message,
         data: data,
     }
-
     res.send(response)
     return
 }

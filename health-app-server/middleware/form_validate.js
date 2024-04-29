@@ -1,11 +1,12 @@
 // 导入joi
 const Joi = require('joi')
+const { logger_user: logger } = require('../utils/logger')
+const { send } = require('../middleware/response_handler')
 
 // 导入自定义错误模块
 const { ValidationError } = require('../utils/custom_error')
 
-// 定义验证规则
-// #region 用户信息验证
+// #region 正则表达式
 /**
  * 匹配手机号码的正则表达式
  */
@@ -26,6 +27,28 @@ const verifyCodePattern = /^\d{6}$/
  */
 const base64Pattern =
     /^(data:image\/(png|jpg|jpeg|gif|bmp|webp|svg\+xml);base64,)([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
+
+/**
+ * 日期时间格式正则
+ * 示例：2024-01-01 00:00:00
+ */
+const dateTimeimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+
+/**
+ * 日期格式正则
+ * 示例：2024-01-01
+ */
+const datePattern = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * 时间格式正则
+ */
+const timePattern = /^\d{2}:\d{2}:\d{2}$/
+
+// #endregion
+
+// 定义验证规则
+// #region 用户信息验证
 
 /**
  * 电话号码验证规则
@@ -75,6 +98,21 @@ const usernameSchema = Joi.string().min(1).max(8).required()
  * 头像为字符串，格式为图片文件，必填
  */
 const avatarSchema = Joi.string().regex(base64Pattern).required()
+
+/**
+ * 修改身高、体重、生日、性别验证规则
+ * height: 身高，单位为cm
+ * weight: 体重，单位为kg
+ * birthday: 生日，格式为YYYY-MM-DD
+ * gender: 性别，只能从“0、1”中选
+ */
+const updateUserBodyInfoSchema = Joi.object({
+    user_id: userIdSchema,
+    height: Joi.number().positive(),
+    weight: Joi.number().positive(),
+    birthday: Joi.string().regex(datePattern),
+    gender: Joi.number().integer().valid(0, 1),
+})
 
 /**
  * 短信验证码登录验证规则
@@ -159,22 +197,6 @@ const changeAvatarSchema = Joi.object({
 // #endregion
 
 // #region 睡眠相关验证
-/**
- * 日期时间格式正则
- * 示例：2024-01-01 00:00:00
- */
-const dateTimeimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
-
-/**
- * 日期格式正则
- * 示例：2024-01-01
- */
-const datePattern = /^\d{4}-\d{2}-\d{2}$/
-
-/**
- * 时间格式正则
- */
-const timePattern = /^\d{2}:\d{2}:\d{2}$/
 
 /**
  * 日期时间格式验证规则
@@ -184,7 +206,7 @@ const dateTimeSchema = Joi.string().regex(dateTimeimePattern).required()
 /**
  * 日期格式验证规则
  */
-const dateSchema = Joi.string().regex(datePattern).required()
+const dateSchema = Joi.string().regex(datePattern)
 
 /**
  * 时间格式验证规则
@@ -294,9 +316,9 @@ const foodListPattern =
 
 /**
  * 饮食类型验证规则
- * 只能从“早餐、午餐、晚餐、加餐”中选
+ * 只能从“早餐、午餐、晚餐、加餐”中选breakfast|lunch|dinner|extra_meal
  */
-const dietTypePattern = /^(早餐|午餐|晚餐|加餐)$/
+const dietTypePattern = /^(breakfast|lunch|dinner|extra_meal)$/
 
 /**
  * 添加到饮食记录验证规则
@@ -307,26 +329,58 @@ const addToDietSchema = Joi.object({
     food_list: Joi.string().regex(foodListPattern).required(),
 })
 
+/**
+ * 根据饮食类型获取饮食记录验证规则
+ */
+const getDietByTypeSchema = Joi.object({
+    user_id: userIdSchema,
+    diet_type: dietTypePattern,
+    eat_time: dateSchema,
+})
+
+/**
+ * 根据创建时间获取饮食记录验证规则
+ */
+const getDietByCreateTimeSchema = Joi.object({
+    user_id: userIdSchema,
+    create_time: dateSchema,
+})
+
+/**
+ * 获取饮食推荐验证规则
+ */
+const getRecommendDietSchema = Joi.object({
+    user_id: userIdSchema,
+})
+
+/**
+ * 添加到饮食推荐验证规则
+ */
+const addToRecommendedDietSchema = Joi.object({
+    user_id: userIdSchema,
+})
+
 // #endregion
 
 // 封装 Joi 验证为中间件
 const joiValidator = (schema) => {
+    const extendedSchema = schema.clone().options({ allowUnknown: true })
+
     return (req, res, next) => {
-        const { error } = schema.validate(req.body)
+        const { error } = extendedSchema.validate(req.body)
 
         if (error) {
-            const { details } = error
-            const firstError = details[0]
-            const { message, path } = firstError
+            const [{ message, path }] = error.details
 
-            const validationError = new ValidationError(`${path.join('.')} 输入有误: ${message}`)
-            validationError.statusCode = 4000
-            validationError.validationDetails = details.map(({ message, path }) => ({ field: path.join('.'), message }))
+            // 构建错误信息并记录日志
+            const errorMessage = `${path.join('.')} 输入有误: ${message}`
+            logger.error(errorMessage)
 
-            throw validationError // 抛出错误，让上层中间件或应用程序捕获
+            // 直接向客户端响应错误，不再创建自定义错误类实例
+            send(res, 4000, errorMessage)
+        } else {
+            next() // 验证成功，继续处理请求
         }
-
-        next() // 验证成功，继续处理请求
     }
 }
 
@@ -341,6 +395,7 @@ module.exports = {
     changeAvatarSchema,
     deleteUserSchema,
     bindEmailSchema,
+    updateUserBodyInfoSchema,
     // 睡眠相关验证
     sleepTimeSchema,
     getSleepSchema,
@@ -349,5 +404,9 @@ module.exports = {
     getFoodListByTagSchema,
     // 饮食相关验证
     addToDietSchema,
+    getDietByTypeSchema,
+    getDietByCreateTimeSchema,
+    getRecommendDietSchema,
+    addToRecommendedDietSchema,
     joiValidator,
 }

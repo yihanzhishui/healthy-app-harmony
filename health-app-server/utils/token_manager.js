@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken')
 const { promisify } = require('util')
 const redis = require('./redis_manager')
 const { token_config } = require('../config/config')
-const { logger_redis: logger } = require('./logger')
 const { RedisError } = require('./custom_error')
 
 class TokenManager {

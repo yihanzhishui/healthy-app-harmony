@@ -27,17 +27,9 @@ let dayOfWeek = today.getDay()
 dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
 
 /**
- * 路由级别中间件，向后传递需要取几条数据
- */
-const setNumberWeek = (req, res, next) => {
-    req.number = dayOfWeek
-    next()
-}
-
-/**
  * 获取本周睡眠数据
  */
-router.get('/get_this_week_sleep_record', joiValidator(getSleepSchema), setNumberWeek, getSleepRecord)
+router.get('/get_this_week_sleep_record', joiValidator(getSleepSchema), getSleepRecord)
 
 // 导出路由实例
 module.exports = router

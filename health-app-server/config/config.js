@@ -103,6 +103,13 @@ const redis_config = {
     local_redis_path: 'D:/Environment/Redis/redis-server.exe',
 }
 
+/**
+ * AI 接口配置对象
+ */
+const ai_config = {
+    ACCESS_TOKEN_URL: 'https://aip.baidubce.com/oauth/2.0/token',
+}
+
 // 导出配置对象
 module.exports = {
     log_config,
@@ -111,4 +118,5 @@ module.exports = {
     email_config,
     token_config,
     redis_config,
+    ai_config,
 }

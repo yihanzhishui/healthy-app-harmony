@@ -29,5 +29,18 @@ db.getConnection((err, connection) => {
     logger.info(`数据库 ${db_config.database} 连接成功`)
     return
 })
+
+/**
+ * 释放数据库连接
+ * @param {db.connection} conn
+ */
+async function releaseConnection(conn) {
+    try {
+        await conn.release()
+    } catch (releaseError) {
+        // 可以在这里记录释放连接时发生的错误，尽管在正常情况下不应发生
+        console.error('释放数据库连接时发生错误:', releaseError)
+    }
+}
 // 导出连接池
-module.exports = db
+module.exports = { db, releaseConnection }

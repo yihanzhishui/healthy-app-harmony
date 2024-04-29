@@ -1,5 +1,4 @@
 const { createClient } = require('redis')
-const { promisify } = require('util')
 const { logger_redis: logger } = require('./logger')
 
 const redisClient = createClient({
