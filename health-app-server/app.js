@@ -20,6 +20,8 @@ app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }))
 
 // 使用express托管静态资源
 app.use('/food_image', express.static('assets/image/food_image'))
+app.use('/music_cover', express.static('assets/image/music_cover'))
+app.use('/music', express.static('assets/music'))
 
 // 导入错误级别中间件
 const { sendError } = require('./middleware/response_handler')
