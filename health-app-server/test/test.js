@@ -134,33 +134,81 @@ let text = `\`\`\`json
 `
 
 console.log(
-    JSON.parse(`{
-    "breakfast": [
-        {
-            "food_id": 2,
-            "eat_quantity": 1,
-            "calorises_intake": 400
-        }
-    ],
-    "lunch": [
-        {
-            "food_id": 3,
-            "eat_quantity": 1,
-            "calorises_intake": 350
-        },
-        {
-            "food_id": 4,
-            "eat_quantity": 1,
-            "calorises_intake": 450
-        }
-    ],
-    "dinner": [
-        {
-            "food_id": 5,
-            "eat_quantity": 1,
-            "calorises_intake": 400
-        }
-    ],
-    "extra_meal": []
-}`)
+    JSON.parse(`{ 
+      "plan_name": "个性化减脂计划", 
+      "plan_cycle": 30, 
+      "plan_start_time": "2023-04-01", 
+      "plan_end_time": "2023-04-30", 
+      "calories_intake_per_day": 1800, 
+      "diet": { 
+          "breakfast": [ 
+              { 
+                  "food_id": 58, 
+                  "food_name": "牛奶", 
+                  "food_image": "http://127.0.0.1:3000/food_image/milk.png", 
+                  "diet_type": "breakfast", 
+                  "eat_quantity": 1, 
+                  "calories_intake": 42 
+              }, 
+              { 
+                  "food_id": 60, 
+                  "food_name": "燕麦片", 
+                  "food_image": "http://127.0.0.1:3000/food_image/oats.jpg", 
+                  "diet_type": "breakfast", 
+                  "eat_quantity": 0.5, 
+                  "calories_intake": 194.5 
+              } 
+          ], 
+          "lunch": [ 
+              { 
+                  "food_id": 56, 
+                  "food_name": "玉米面", 
+                  "food_image": "http://127.0.0.1:3000/food_image/corn.png", 
+                  "diet_type": "lunch", 
+                  "eat_quantity": 1, 
+                  "calories_intake": 365 
+              }, 
+              { 
+                  "food_id": 57, 
+                  "food_name": "菠菜", 
+                  "food_image": "http://127.0.0.1:3000/food_image/spinach.png", 
+                  "diet_type": "lunch", 
+                  "eat_quantity": 0.25, 
+                  "calories_intake": 5.75 
+              } 
+          ], 
+          "dinner": [ 
+              { 
+                  "food_id": 55, 
+                  "food_name": "杏仁", 
+                  "food_image": "http://127.0.0.1:3000/food_image/almond.jpg", 
+                  "diet_type": "dinner", 
+                  "eat_quantity": 0.25, 
+                  "calories_intake": 144.75 
+              }, 
+              { 
+                  "food_id": 59, 
+                  "food_name": "核桃", 
+                  "food_image": "http://127.0.0.1:3000/food_image/walnut.jpg", 
+                  "diet_type": "dinner", 
+                  "eat_quantity": 0.25, 
+                  "calories_intake": 163.5 
+              } 
+          ], 
+          "extra_meal": [] 
+      }, 
+      "exercise": { 
+          "outdoor_running": { 
+              "exercise_type": "outdoor_running", 
+              "exercise_time": "08:00:00", 
+              "duration": 30, 
+              "distance": 3000 
+          } 
+      }, 
+      "sleep": { 
+          "sleep_time": "23:00:00", 
+          "wake_time": "07:00:00", 
+          "duration": 420 
+      } 
+  } `)
 )

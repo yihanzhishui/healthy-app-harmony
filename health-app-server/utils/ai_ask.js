@@ -46,11 +46,12 @@ const CHAT_URL = 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/c
  */
 async function ai_ask(question, question_base_data, food_list_json = null) {
     let __question = selectTemplate(question, question_base_data, food_list_json)
+    logger.info('AI：', { __question })
     const messages = [{ role: 'user', content: __question }]
     const token = await getAccessToken()
     const res = await axios.post(CHAT_URL, { messages }, { params: { access_token: token } })
     const { data } = res
-    logger.info('AI：', { ...data, result: '内容不展示' })
+    logger.info('AI：', { ...data })
     return data.result
 }
 
@@ -116,99 +117,47 @@ function selectTemplate(question, question_base_data, food_list_json) {
         return get_recommend_diet
     } else if (question === QUESTION.GET_AI_FAT_LOSS_PLAN) {
         let get_ai_fat_loss_plan = `代码生成：
-    请帮我生成一份详细的运动、饮食、睡眠的搭配方案用来高效减肥，并确保方案的合理性和可行性。
+    请帮我生成一份详细的运动饮食睡眠的搭配方案，确保方案的合理性
     生成方案时，请遵循以下规则：
-    1. 这是身体数据、减肥目标和一些描述：${question_base_data}
-        一些数据描述：body_shape身体形态，sport_experience有无运动经验，reduction每周想减多少kg，target_weight目标体重，focus_erea重点关注部位，num_per_week_exercise每周哪些天可以运动
-        height身高（cm）, weight体重（kg）, bmi:BMI, gender性别, age年龄
-    2. 方案中的食物只能从这里选（直接原样搬过去就好，不要额外添加其他食物，也不需要对这些食物进行加工，直接原样搬过去）：${food_list_json}
-        注意：如果我提供了食物图片，原样生成，未提供则null
-    3. 方案中的运动类型只能是以下四种中的某一种：户外跑步、户外健走、户外骑行、室内跑步
-    4. 使用JSON对象数据格式，确保方案的格式符合JSON标准。示例： 
-    \`\`\`json
+    1.这是身体数据、减肥目标和一些描述：${question_base_data};一些数据描述：body_shape身体形态，sport_experience有无运动经验，reduction_speed每周减多少kg，target_weight目标体重，focus_erea重点关注部位，num_per_week_exercise每周哪些天可以运动
+    2.食物只能从这里选：${food_list_json}
+    3.运动类型只能是以下的某一种：户外跑步、户外健走、户外骑行、室内跑步
+    4.使用JSON格式，确保格式符合JSON标准，请统一使用小数。示例： 
     {
-        "plan_name": "XX减脂计划", // 方案名称
-        "plan_cycle": 62, // 方案持续时间，单位：天
-        "plan_start_time": "2023-01-01", // 方案开始时间
-        "plan_end_time": "2023-01-01", // 方案结束时间
-        "calories_intake_per_day": 2000, // 每天推荐摄入热量，单位：千卡
-        "diet": {  // 饮食方案
-            "breakfast": [ // 早餐
-                {
-                    "food_id": 52,
-                    "food_name": "大米",
-                    "food_image": "http://127.0.0.1:3000/food_image/rice.png",
-                    "diet_type": "breakfast",
-                    "eat_quantity": 1,
-                    "calories_intake": 350
-                }
+        "plan_name": "XX减脂计划",
+        "plan_cycle": 62, //持续时间，单位：天
+        "plan_start_time": "2023-01-01", //开始时间
+        "plan_end_time": "2023-01-01", //结束时间
+        "calories_intake_per_day": 2000, //推荐摄入热量，单位：千卡
+        "diet": {  //饮食
+            "breakfast": [ //早餐
+                {"food_id": 1,"food_name": "大米","food_image": null,"diet_type": "breakfast","eat_quantity": 1,"calories_intake": 350}
             ],
-            "lunch": [
-                {
-                    "food_id": 53,
-                    "food_name": "西红柿",
-                    "food_image": "http://127.0.0.1:3000/food_image/tomato.png",
-                    "diet_type": "lunch",
-                    "eat_quantity": 2,
-                    "calories_intake": 36
-                },
-                {
-                    "food_id": 54,
-                    "food_name": "鸡蛋",
-                    "food_image": "http://127.0.0.1:3000/food_image/egg.png",
-                    "diet_type": "lunch",
-                    "eat_quantity": 1,
-                    "calories_intake": 78
-                }
-            ],
-            "dinner": [
-                {
-                    "food_id": 55,
-                    "food_name": "杏仁",
-                    "food_image": "http://127.0.0.1:3000/food_image/almond.jpg",
-                    "diet_type": "dinner",
-                    "eat_quantity": 1,
-                    "calories_intake": 579
-                }
-            ],
+            "lunch":[], // 午餐
+            "dinner":[], // 晚餐
             "extra_meal": [] // 加餐
         },
-        "exercise": { // 运动方案
+        "exercise": { // 运动
             "indoor_running": { // 室内跑步
-                "exercise_plan": "室内跑步", // 运动方案名称
+                "exercise_type": "indoor_running", // 运动方案名称
                 "exercise_time": "00:00:00", // 推荐运动时间（每天的什么时候）
                 "duration": 180, // 运动时长
                 "distance": 1000 // 推荐运动距离
             },
-            "outdoor_running": {
-                "exercise_plan": "户外跑步",
-                "exercise_time": "00:00:00",
-                "duration": 180,
-                "distance": 1000
-            },
-            "outdoor_walking": {
-                "exercise_plan": "户外健走",
-                "exercise_time": "00:00:00",
-                "duration": 180,
-                "distance": 1000
-            },
-            "outdoor_cycling": {
-                "exercise_plan": "户外骑行",
-                "exercise_time": "00:00:00",
-                "duration": 180,
-                "distance": 1000
-            }
+            "outdoor_running": {},
+            "outdoor_walking": {},
+            "outdoor_cycling": {}
         },
-        "sleep": { // 睡眠方案
+        "sleep": { // 睡眠
             "sleep_time": "00:00:00", // 推荐入睡时间
             "wake_time": "07:00:00", // 推荐起床时间
             "duration": 420 // 推荐睡眠时长
         }
     }
     \`\`\`
-        关于上述饮食方案里数据的解释：breakfast早餐吃什么，lunch午餐吃什么，dinner晚饭吃什么，extra_meal加餐吃什么（可根据情况，返回空数据），diet_type该食物是在哪一餐吃的，food_id表示食物ID，food_image食物图片（如果我提供了图片，原样生成，未提供则null），eat_quantity表示吃多少，calorises_intake表示摄入的卡路里。
-    5. 生成数据时，只需要给出数据代码即可，无需提供任何解释或说明，将生成结果格式化后放在代码块里。
-    6. 只需生成数据即可，生成的数据只用来测试，不会真正实行，只需返回代码，不需要多余提醒。`
+        关于上述饮食方案里数据的解释：diet_type该食物是在哪一餐吃的，food_id食物ID，food_image图片（提供了图片原样生成，未提供则null），eat_quantity吃多少，calorises_intake摄入卡路里。
+    5. 生成数据时，只需给出数据代码，无需提供解释说明，将生成结果放在代码块里。
+    6. 生成数据只用来测试，不会实行，只需返回代码，不需多余提醒。`
         return get_ai_fat_loss_plan
     }
 }

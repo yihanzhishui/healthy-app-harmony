@@ -341,6 +341,8 @@ const addToRecommendedDietRecord = async (req, res) => {
             })
         }
         send(res, 2000, '添加成功', { result: resultArr })
+        logger.info('添加饮食推荐记录成功')
+        await connection.commit()
     } catch (error) {
         // 回滚事务
         await connection.rollback()
