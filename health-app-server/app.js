@@ -18,6 +18,9 @@ app.use(cors())
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }))
 
+// 使用express托管静态资源
+app.use('/food_image', express.static('assets/image/food_image'))
+
 // 导入错误级别中间件
 const { sendError } = require('./middleware/response_handler')
 app.use(sendError)
