@@ -32,8 +32,8 @@ const userRouter = require('./routes/user/user_login_reg')
 app.use('/user', userRouter)
 
 // 导入并使用用户路由模块,需要token
-const userChangeInfoRouter = require('./routes/user/user_change_info')
-app.use('/user_info', verifyToken, userChangeInfoRouter)
+const userInfoRouter = require('./routes/user/user_info')
+app.use('/user_info', verifyToken, userInfoRouter)
 
 // 导入并使用睡眠记录模块，需要token
 const sleepRecordRouter = require('./routes/sleep/sleep')
@@ -46,6 +46,10 @@ app.use('/food', verifyToken, foodRecordRouter)
 // 导入并使用饮食记录模块，需要token
 const dietRecordRouter = require('./routes/diet/diet')
 app.use('/diet', verifyToken, dietRecordRouter)
+
+// 导入并使用运动记录模块，需要token
+const sportRecordRouter = require('./routes/sport/sport')
+app.use('/sport', verifyToken, sportRecordRouter)
 
 // 导入并使用获取验证码路由模块
 const verifyCodeRouter = require('./routes/verify_code/verify_code')

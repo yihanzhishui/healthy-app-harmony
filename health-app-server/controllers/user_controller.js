@@ -638,7 +638,7 @@ const updateUserBodyInfo = async (req, res) => {
                 weight,
                 birthday,
                 age: calculateAge(birthday),
-                gender: gender === '0' ? '男' : '女',
+                gender: gender === '1' ? '男' : '女',
             })
         } else {
             await connection.rollback()
@@ -651,6 +651,63 @@ const updateUserBodyInfo = async (req, res) => {
         logger.error('数据库操作出现错误：' + error.message)
         send(res, 5000, '服务器内部错误')
     } finally {
+        return
+    }
+}
+
+/**
+ * 处理获取身高、体重、生日、性别
+ */
+const getUserBodyInfo = async (req, res) => {
+    const { user_id } = req.body
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction() // 开始事务
+
+        // 查询用户是否存在且未被删除
+        let sql = `SELECT * FROM user WHERE user_id = ? AND is_deleted = 0`
+        const [userResults] = await connection.query(sql, [user_id])
+
+        if (userResults.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+
+        // 查询用户信息表user_info并同时格式化时间
+
+        sql = `SELECT *, DATE_FORMAT(birthday, '%Y-%m-%d') AS formatted_birthday FROM user_info WHERE user_id = ?`
+        const [userInfoResults] = await connection.query(sql, [user_id])
+        if (userInfoResults.length === 0) {
+            send(res, 4003, '用户信息不存在')
+            return
+        }
+        const userInfo = userInfoResults[0]
+        const { height, weight, formatted_birthday, gender } = userInfo
+        const age = calculateAge(formatted_birthday)
+        // 计算BMI
+        const bmi = parseFloat((weight / ((height / 100) * (height / 100))).toFixed(2))
+        // 格式化生日
+        logger.info(`用户 ${user_id} 获取身体信息成功`)
+        send(res, 2000, '获取身体信息成功', {
+            user_id,
+            height,
+            weight,
+            bmi,
+            birthday: formatted_birthday,
+            age,
+            gender: gender === 1 ? '男' : '女',
+        })
+        console.log(userInfo)
+    } catch (error) {
+        if (connection) {
+            await connection.rollback() // 捕获到任何异常，事务回滚
+        }
+        logger.error('数据库操作出现错误：' + error.message)
+        send(res, 5000, '服务器内部错误')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
         return
     }
 }
@@ -705,4 +762,5 @@ module.exports = {
     bindHuaweiAccount,
     logout,
     updateUserBodyInfo,
+    getUserBodyInfo,
 }

@@ -45,6 +45,21 @@ const datePattern = /^\d{4}-\d{2}-\d{2}$/
  */
 const timePattern = /^\d{2}:\d{2}:\d{2}$/
 
+/**
+ * 身体形态正则
+ */
+const bodyShapePattern = /苹果型|梨型|三角型|匀称型|辣椒型|沙漏型/
+
+/**
+ * 运动经验正则
+ */
+const sportExperiencePattern = /有经验|无经验/
+
+/**
+ * 重点关注区域正则
+ */
+const focusAreaPattern = /胸部|背部|手臂|腹部|臀部|腿部|全身/
+
 // #endregion
 
 // 定义验证规则
@@ -362,6 +377,30 @@ const addToRecommendedDietSchema = Joi.object({
 
 // #endregion
 
+// #region 运动减脂相关验证
+
+/**
+ * 获取 AI 运动减脂计划验证规则
+ */
+const getAIFatLossPlanSchema = Joi.object({
+    user_id: userIdSchema,
+    body_shape: Joi.string().regex(bodyShapePattern).required(),
+    sport_experience: Joi.string().regex(sportExperiencePattern).required(),
+    reduction_speed: Joi.string().required(),
+    target_weight: Joi.string().required(),
+    focus_area: Joi.string().regex(focusAreaPattern).required(),
+    num_per_week_exercise: Joi.string().required(),
+})
+
+/**
+ * 采纳 AI 运动减脂计划验证规则
+ */
+const adoptAIFatLossPlanSchema = Joi.object({
+    user_id: userIdSchema,
+})
+
+// #endregion
+
 // 封装 Joi 验证为中间件
 const joiValidator = (schema) => {
     const extendedSchema = schema.clone().options({ allowUnknown: true })
@@ -408,5 +447,8 @@ module.exports = {
     getDietByCreateTimeSchema,
     getRecommendDietSchema,
     addToRecommendedDietSchema,
+    // 运动减脂相关验证
+    getAIFatLossPlanSchema,
+    adoptAIFatLossPlanSchema,
     joiValidator,
 }

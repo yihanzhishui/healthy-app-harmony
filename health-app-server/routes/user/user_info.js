@@ -17,6 +17,7 @@ const {
     bindEmail,
     bindHuaweiAccount,
     updateUserBodyInfo,
+    getUserBodyInfo,
 } = require('../../controllers/user_controller')
 
 /**
@@ -49,6 +50,11 @@ router.put('/binding_email', joiValidator(bindEmailSchema), bindEmail)
  * 修改身高、体重、生日、性别
  */
 router.put('/update_user_body_info', joiValidator(updateUserBodyInfoSchema), updateUserBodyInfo)
+
+/**
+ * 获取身高、体重、生日、性别
+ */
+router.get('/get_user_body_info', joiValidator(updateUserBodyInfoSchema), getUserBodyInfo)
 
 // 导出路由实例
 module.exports = router

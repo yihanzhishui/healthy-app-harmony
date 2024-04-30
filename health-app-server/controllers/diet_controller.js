@@ -2,7 +2,7 @@ const { db, releaseConnection } = require('../utils/database')
 const { sendError, send } = require('../middleware/response_handler')
 const { logger_db: logger } = require('../utils/logger')
 const ai_ask = require('../utils/ai_ask')
-const { QUESTION, AI_ANSWER_KEY } = require('../constant/constant')
+const { QUESTION, AI_ANSWER_KEY_DIET } = require('../constant/constant')
 const redis = require('../utils/redis_manager')
 
 /**
@@ -250,7 +250,7 @@ const getRecommendDiet = async (req, res) => {
         let recommend_diet_ai = await ai_ask(QUESTION.GET_RECOMMEND_DIET, question_base_data)
         let recommend_diet_ai_json = recommend_diet_ai.replace(/^\s*```json\s*\n|```$/gm, '')
         // 将这条记录暂存至redis
-        await redis.set(AI_ANSWER_KEY, recommend_diet_ai_json)
+        await redis.set(AI_ANSWER_KEY_DIET + user_id, recommend_diet_ai_json)
         // 数据处理
         let recommend_diet_list = JSON.parse(recommend_diet_ai_json)
         send(res, 2000, '获取饮食推荐成功', { ...recommend_diet_list })
@@ -287,7 +287,7 @@ const addToRecommendedDietRecord = async (req, res) => {
             return
         }
         // 尝试从Redis中获取饮食推荐记录
-        let recommend_diet_ai_json = await redis.get(AI_ANSWER_KEY)
+        let recommend_diet_ai_json = await redis.get(AI_ANSWER_KEY_DIET + user_id)
         if (!recommend_diet_ai_json) {
             send(res, 2000, '饮食推荐记录不存在')
             return
