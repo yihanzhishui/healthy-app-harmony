@@ -23,39 +23,39 @@ app.use('/food_image', express.static('assets/image/food_image'))
 app.use('/music_cover', express.static('assets/image/music_cover'))
 app.use('/music', express.static('assets/music'))
 
-// 导入错误级别中间件
+// 错误级别中间件
 const { sendError } = require('./middleware/response_handler')
 app.use(sendError)
 
-// 导入并使用用户路由模块,无需token
+// 用户路由,无需token
 const userRouter = require('./routes/user/user_login_reg')
 app.use('/user', userRouter)
 
-// 导入并使用用户路由模块,需要token
+// 用户路由,需要token
 const userInfoRouter = require('./routes/user/user_info')
 app.use('/user_info', verifyToken, userInfoRouter)
 
-// 导入并使用睡眠记录模块，需要token
+// 睡眠记录，需要token
 const sleepRecordRouter = require('./routes/sleep/sleep')
 app.use('/sleep', verifyToken, sleepRecordRouter)
 
-// 导入并使用食物模块，需要token
+// 食物，需要token
 const foodRecordRouter = require('./routes/diet/food')
 app.use('/food', verifyToken, foodRecordRouter)
 
-// 导入并使用饮食记录模块，需要token
+// 饮食记录，需要token
 const dietRecordRouter = require('./routes/diet/diet')
 app.use('/diet', verifyToken, dietRecordRouter)
 
-// 导入并使用运动记录模块，需要token
+// 运动记录，需要token
 const sportRecordRouter = require('./routes/sport/sport')
 app.use('/sport', verifyToken, sportRecordRouter)
 
-// 导入并使用音乐模块，需要token
+// 音乐模块，需要token
 const musicRouter = require('./routes/music/music')
 app.use('/music', verifyToken, musicRouter)
 
-// 导入并使用获取验证码路由模块
+// 验证码
 const verifyCodeRouter = require('./routes/verify_code/verify_code')
 app.use('/code', verifyCodeRouter)
 
