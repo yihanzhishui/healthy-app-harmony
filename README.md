@@ -20,6 +20,10 @@ node app.js
 
 服务器将运行在 http://localhost:3000。
 
+## 接口文档
+
+[健康方舟接口文档 - HealthyArk (apifox.com)](https://apifox.com/apidoc/shared-e2af47f5-c77e-4f85-b3f3-3d697ea97340/api-170174528)
+
 ## 用户登录注册
 
 用户可以通过发送用户名和密码到 `/user/login` 或 `/user/register` 接口进行登录注册。
