@@ -10,7 +10,7 @@ const getFoodList = async (req, res) => {
     try {
         const { page_number, page_size } = req.body
         const offset = (page_number - 1) * page_size
-        const limit = page_size
+        const limit = parseInt(page_size)
 
         let sql = `SELECT * FROM food LIMIT ${offset}, ${limit}`
         let [results] = await connection.query(sql)

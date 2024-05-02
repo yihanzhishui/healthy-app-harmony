@@ -399,8 +399,68 @@ const adoptAIFatLossPlanSchema = Joi.object({
     user_id: userIdSchema,
 })
 
+/**
+ * 获取运动计划验证规则
+ */
+const getLatestExercisePlanSchema = Joi.object({
+    user_id: userIdSchema,
+    page_number: Joi.number().integer().positive(),
+    page_size: Joi.number().integer().positive(),
+})
+
+/**
+ * 获取减脂计划验证规则
+ */
+const getFatLossPlanSchema = Joi.object({
+    user_id: userIdSchema,
+    page_number: Joi.number().integer().positive(),
+    page_size: Joi.number().integer().positive(),
+    create_date: dateSchema,
+})
+
 // #endregion
 
+// #region 音乐相关验证
+
+/**
+ * 根据音乐分类获取音乐基本信息验证规则
+ */
+const getMusicInfoByCategorySchema = Joi.object({
+    user_id: userIdSchema,
+    category: Joi.string().required(),
+    page_number: Joi.number().integer().positive(),
+    page_size: Joi.number().integer().positive(),
+})
+
+/**
+ * 获取某音乐具体信息验证规则
+ */
+const getMusicSchema = Joi.object({
+    user_id: userIdSchema,
+    page_number: Joi.number().integer().positive(),
+    page_size: Joi.number().integer().positive(),
+    music_id: userIdSchema,
+})
+
+/**
+ * 收藏音乐验证规则
+ */
+const handleFavoriteMusicSchema = Joi.object({
+    user_id: userIdSchema,
+    music_id: userIdSchema,
+    favorite_time: dateTimeSchema,
+})
+
+/**
+ * 根据用户ID获取用户收藏的音乐验证规则
+ */
+const getFavoriteMusicSchema = Joi.object({
+    user_id: userIdSchema,
+    page_number: Joi.number().integer().positive(),
+    page_size: Joi.number().integer().positive(),
+})
+
+// #endregion
 // 封装 Joi 验证为中间件
 const joiValidator = (schema) => {
     const extendedSchema = schema.clone().options({ allowUnknown: true })
@@ -450,5 +510,12 @@ module.exports = {
     // 运动减脂相关验证
     getAIFatLossPlanSchema,
     adoptAIFatLossPlanSchema,
+    getLatestExercisePlanSchema,
+    getFatLossPlanSchema,
+    // 音乐相关验证
+    getMusicInfoByCategorySchema,
+    getMusicSchema,
+    handleFavoriteMusicSchema,
+    getFavoriteMusicSchema,
     joiValidator,
 }

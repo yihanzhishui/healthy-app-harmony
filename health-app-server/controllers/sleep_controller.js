@@ -93,6 +93,7 @@ const recordSleep = async (req, res) => {
         if (connection) {
             await releaseConnection(connection)
         }
+        return
     }
 }
 
@@ -133,7 +134,7 @@ const getSleepRecord = async (req, res) => {
             results.forEach((result) => {
                 result.bed_time = result.formatted_bed_time
                 result.wake_time = result.formatted_wake_time
-                result.sleep_time = result.formatted_sleep_time // 确认这个字段是否需要，SQL中未明确对应字段
+                result.sleep_time = result.formatted_sleep_time
                 result.wake_up_time = result.formatted_create_time // 确保字段名正确
                 result.record_time = result.formatted_create_time
                 result.create_time = result.formatted_create_time

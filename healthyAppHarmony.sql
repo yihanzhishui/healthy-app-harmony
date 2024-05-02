@@ -1,331 +1,244 @@
--- 创建 MySQL 数据库 healthy_DB
--- 接下来的 SQL 语句仅适用于 MySQL 数据库
-DROP DATABASE IF EXISTS healthy_DB;
-CREATE DATABASE healthy_DB;
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
 
--- 使用 healthy_DB 数据库
-USE healthy_DB;
+-- ----------------------------
+-- Table structure for ai_plan
+-- ----------------------------
+DROP TABLE IF EXISTS `ai_plan`;
+CREATE TABLE `ai_plan`  (
+  `ai_plan_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `fat_loss_plan_id` int NOT NULL,
+  `plan_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `recommended_calories` int NOT NULL,
+  `exercise_plan_ids` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `create_time` datetime NOT NULL,
+  `recommended_diet_ids` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`ai_plan_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `fat_loss_plan_id`(`fat_loss_plan_id` ASC) USING BTREE,
+  INDEX `diet_record_id`(`exercise_plan_ids` ASC) USING BTREE,
+  CONSTRAINT `ai_plan_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `ai_plan_ibfk_2` FOREIGN KEY (`fat_loss_plan_id`) REFERENCES `fat_loss_plan` (`plan_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for diet_record
+-- ----------------------------
+DROP TABLE IF EXISTS `diet_record`;
+CREATE TABLE `diet_record`  (
+  `diet_record_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `diet_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `food_id` int NOT NULL,
+  `eat_quantity` int NOT NULL,
+  `calories_intake` int NOT NULL,
+  `create_time` datetime NOT NULL,
+  `eat_time` datetime NOT NULL,
+  PRIMARY KEY (`diet_record_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `food_id`(`food_id` ASC) USING BTREE,
+  CONSTRAINT `diet_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `diet_record_ibfk_2` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 约定
--- 用户主键为 5 位数字
+-- ----------------------------
+-- Table structure for exercise_plan
+-- ----------------------------
+DROP TABLE IF EXISTS `exercise_plan`;
+CREATE TABLE `exercise_plan`  (
+  `exercise_plan_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `exercise_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `exercise_time` datetime NOT NULL,
+  `distance` float NOT NULL,
+  `duration` float NOT NULL,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`exercise_plan_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `exercise_plan_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for exercise_record
+-- ----------------------------
+DROP TABLE IF EXISTS `exercise_record`;
+CREATE TABLE `exercise_record`  (
+  `exercise_record_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NULL DEFAULT NULL,
+  `exercise_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `exercise_time` datetime NOT NULL,
+  `calories_burned` int NOT NULL,
+  `distance` float NOT NULL,
+  `duration` int NOT NULL,
+  `exercise_track` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`exercise_record_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `exercise_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 判断用户表是否已经存在，不存在则创建
--- 用户ID：主键、自增长、整数类型、从 1000 开始递增
--- 用户名：字符串类型、长度为 20、可为空
--- 电话：字符串类型、长度为 11、可为空
--- 邮箱：字符串类型、长度为 50、可为空
--- 华为账户： 字符串类型、长度为 255、可为空
--- 密码：字符串类型、长度为 50、不可为空
--- 密码加密盐：字符串类型、长度为 8、不可为空
--- 头像：字符串类型、长度为 255、可为空
--- 是否已注销：布尔类型、取值为 '0' 或 '1'，分别表示'未注销'、'已注销'，不可为空
-CREATE TABLE IF NOT EXISTS user (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(20) NULL,
-    phone VARCHAR(20) NULL,
-    email VARCHAR(50) NULL,
-    huawei_account VARCHAR(255) NULL,
-    password VARCHAR(100) NOT NULL,
-    salt VARCHAR(100) NOT NULL,
-    avatar MEDIUMTEXT NULL,
-    is_deleted BOOLEAN NOT NULL
-);
+-- ----------------------------
+-- Table structure for fat_loss_plan
+-- ----------------------------
+DROP TABLE IF EXISTS `fat_loss_plan`;
+CREATE TABLE `fat_loss_plan`  (
+  `plan_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `plan_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `target_weight` float NOT NULL,
+  `reduction_speed` varchar(2) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `focus_area` varchar(14) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `plan_cycle` int NOT NULL,
+  `plan_start_time` datetime NOT NULL,
+  `plan_end_time` datetime NOT NULL,
+  `create_date` datetime NOT NULL,
+  PRIMARY KEY (`plan_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `fat_loss_plan_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for favorite_music
+-- ----------------------------
+DROP TABLE IF EXISTS `favorite_music`;
+CREATE TABLE `favorite_music`  (
+  `favorite_music_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NULL DEFAULT NULL,
+  `music_id` int NULL DEFAULT NULL,
+  `favorite_time` datetime NOT NULL,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`favorite_music_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `music_id`(`music_id` ASC) USING BTREE,
+  CONSTRAINT `favorite_music_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `favorite_music_ibfk_2` FOREIGN KEY (`music_id`) REFERENCES `music` (`music_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 判断用户信息表是否已经存在，不存在则创建
--- 用户ID：整数类型、主键、外键，引用用户表的主键
--- 身高：浮点数类型、可为空
--- 体重：浮点数类型、可为空
--- 生日：日期时间类型、可为空
--- 性别：布尔类型，取值为 '0' 或 '1'，分别表示'男'、'女'，可为空
--- 创建时间：日期时间类型、不可为空
--- 最近修改时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS user_info (
-    user_id INT PRIMARY KEY,
-    height FLOAT NULL,
-    weight FLOAT NULL,
-    birthday DATETIME NULL,
-    gender BOOLEAN NULL,
-    create_time DATETIME NOT NULL,
-    update_time  DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
+-- ----------------------------
+-- Table structure for food
+-- ----------------------------
+DROP TABLE IF EXISTS `food`;
+CREATE TABLE `food`  (
+  `food_id` int NOT NULL AUTO_INCREMENT,
+  `food_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `food_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `calories` int NOT NULL,
+  `create_time` datetime NOT NULL,
+  `food_tags` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  PRIMARY KEY (`food_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 76 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for health_indicator_record
+-- ----------------------------
+DROP TABLE IF EXISTS `health_indicator_record`;
+CREATE TABLE `health_indicator_record`  (
+  `health_indicator_record_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NULL DEFAULT NULL,
+  `measure_time` datetime NOT NULL,
+  `measure_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `measure_result` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`health_indicator_record_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `health_indicator_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 判断食物表是否已经存在，不存在则创建
--- 食物ID：主键、自增长、整数类型
--- 食物名称：字符串类型、长度为 20、不可为空
--- 食物图片：字符串类型、长度为 255、可为空
--- 食物热量：整数类型、不可为空
--- 食物标签：字符串类型，长度20，不可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS food (
-    food_id INT AUTO_INCREMENT PRIMARY KEY,
-    food_name VARCHAR(20) NOT NULL,
-    food_image VARCHAR(255) NULL,
-    calories INT NOT NULL,
-    food_tags VARCHAR(20) NOT NULL,
-    create_time DATETIME NOT NULL
-);
+-- ----------------------------
+-- Table structure for music
+-- ----------------------------
+DROP TABLE IF EXISTS `music`;
+CREATE TABLE `music`  (
+  `music_id` int NOT NULL AUTO_INCREMENT,
+  `music_name` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `music_file_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `music_duration` int NOT NULL,
+  `music_file_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `music_file_size` float NOT NULL,
+  `music_file_md5` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `music_album_cover` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `tags` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `category` varchar(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `listen_count` int NOT NULL DEFAULT 0,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`music_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for recommended_diet
+-- ----------------------------
+DROP TABLE IF EXISTS `recommended_diet`;
+CREATE TABLE `recommended_diet`  (
+  `recommended_diet_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `food_id` int NOT NULL,
+  `eat_quantity` int NOT NULL,
+  `fat_loss_plan_id` int NULL DEFAULT NULL,
+  `calories_intake` int NOT NULL,
+  `diet_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `create_time` datetime NOT NULL,
+  PRIMARY KEY (`recommended_diet_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  INDEX `food_id`(`food_id` ASC) USING BTREE,
+  CONSTRAINT `recommended_diet_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `recommended_diet_ibfk_2` FOREIGN KEY (`food_id`) REFERENCES `food` (`food_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 34 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 判断推荐饮食搭配表是否已经存在，不存在则创建
--- 搭配ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 食物ID：整数类型、外键，引用食物表的主键
--- 食用数量：整数类型、不可为空
--- 摄入热量：整数类型、不可为空
--- 饮食类型：字符串类型、长度为 20、不可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS recommended_diet (
-    recommended_diet_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    food_id INT NOT NULL,
-    eat_quantity INT NOT NULL,
-    calories_intake INT NOT NULL,
-    diet_type VARCHAR(20) NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (food_id) REFERENCES food(food_id)
-);
+-- ----------------------------
+-- Table structure for sleep_record
+-- ----------------------------
+DROP TABLE IF EXISTS `sleep_record`;
+CREATE TABLE `sleep_record`  (
+  `sleep_record_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `bed_time` datetime NOT NULL,
+  `sleep_interval` int NOT NULL,
+  `wake_time` datetime NOT NULL,
+  `wake_up_interval` int NOT NULL,
+  `bed_time_duration` int NOT NULL,
+  `sleep_duration` int NOT NULL,
+  `sleep_quality` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `record_time` datetime NOT NULL,
+  `create_time` datetime NOT NULL,
+  `sleep_time` datetime NOT NULL,
+  `wake_up_time` datetime NOT NULL,
+  PRIMARY KEY (`sleep_record_id`) USING BTREE,
+  INDEX `user_id`(`user_id` ASC) USING BTREE,
+  CONSTRAINT `sleep_record_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
+-- ----------------------------
+-- Table structure for user
+-- ----------------------------
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user`  (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `phone` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `password` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `salt` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `avatar` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `is_deleted` tinyint(1) NOT NULL,
+  `huawei_account` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`user_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- 判断饮食记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 饮食类型：字符串类型，长度为 20、'早餐'、'午餐'、'晚餐'、'加餐'、不可为空
--- 食物ID：整数类型、外键，引用食物表的主键
--- 食用时间：日期时间类型、不可为空
--- 食用数量：整数类型、不可为空
--- 摄入热量：整数类型、不可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS diet_record (
-    diet_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    diet_type VARCHAR(20) NOT NULL,
-    food_id INT,
-    eat_time DATETIME NOT NULL,
-    eat_quantity INT NOT NULL,
-    calories_intake INT NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (food_id) REFERENCES food(food_id)
-);
+-- ----------------------------
+-- Table structure for user_info
+-- ----------------------------
+DROP TABLE IF EXISTS `user_info`;
+CREATE TABLE `user_info`  (
+  `user_id` int NOT NULL,
+  `height` float NULL DEFAULT NULL,
+  `weight` float NULL DEFAULT NULL,
+  `birthday` datetime NULL DEFAULT NULL,
+  `gender` tinyint(1) NULL DEFAULT NULL,
+  `create_time` datetime NOT NULL,
+  `update_time` datetime NOT NULL,
+  PRIMARY KEY (`user_id`) USING BTREE,
+  CONSTRAINT `user_info_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
-
--- 判断睡眠记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 上床时间：日期时间类型，不可为空
--- 入睡上床时间间隔：整数类型、不可为空
--- 醒来时间：日期时间类型，不可为空
--- 醒来起床时间间隔：整数类型、不可为空
--- 卧床时间：整数类型，不可为空
--- 睡眠时间：整数类型，不可为空
--- 睡眠质量：字符串类型、长度为20、'优质睡眠'、'良好睡眠'、'一般睡眠'、'差睡眠'、不可为空
--- 记录时间：日期时间类型、不可为空（表示这条记录是哪天的）
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS sleep_record (
-    sleep_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    bed_time DATETIME NOT NULL,
-    sleep_interval INT NOT NULL,
-    wake_time DATETIME NOT NULL,
-    wake_up_interval INT NOT NULL,
-    bed_time_duration INT NOT NULL,
-    sleep_duration INT NOT NULL,
-    sleep_quality VARCHAR(20) NOT NULL,
-    record_time DATETIME NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
--- 判断健康指标记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 测量时间：日期时间类型、不可为空
--- 测量类型：字符串类型，长度为20、'血压'、'心率'、'体温'、'血糖'、'血氧'、'体温'、不可为空
--- 测量结果：字符串类型、长度为20、根据测量类型不同，对应不同测量结果
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS health_indicator_record (
-    health_indicator_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    measure_time DATETIME NOT NULL,
-    measure_type VARCHAR(20) NOT NULL,
-    measure_result VARCHAR(20) NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
-
--- 判断减脂计划表是否已经存在，不存在则创建
--- 计划ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 计划名称：字符串类型、长度为20、不可为空
--- 计划目标体重：浮点数类型、不可为空
--- 计划减重速度：字符串类型、长度为2、'推荐'、'快速'、'激进'、不可为空
--- 重点减脂部位：字符串类型、长度为14，不可为空
--- 预期结果：字符串类型、长度为100、根据计划目标不同，对应不同预期结果
--- 计划周期：整数类型、不可为空
--- 计划开始时间：日期时间类型、不可为空
--- 计划结束时间：日期时间类型、不可为空
--- 创建日期：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS fat_loss_plan (
-    plan_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    plan_name VARCHAR(20) NOT NULL,
-    target_weight FLOAT NOT NULL,
-    reduction_speed VARCHAR(2) NOT NULL,
-    focus_area VARCHAR(14) NOT NULL,
-    expected_result VARCHAR(100) NOT NULL,
-    plan_cycle INT NOT NULL,
-    plan_start_time DATETIME NOT NULL,
-    plan_end_time DATETIME NOT NULL,
-    create_date DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
--- 判断减脂记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 计划ID：整数类型、外键，引用减脂计划表的主键
--- 记录时间：日期时间类型、不可为空
--- 记录类型：字符串类型、长度为20、'体重'、'饮食'、'运动'、不可为空
--- 记录内容：字符串类型、长度为20、根据记录类型不同，对应不同记录内容
--- 记录数值：整数类型、根据记录类型不同，对应不同记录数值
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS fat_loss_record (
-    fat_loss_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    plan_id INT,
-    record_time DATETIME NOT NULL,
-    record_type VARCHAR(20) NOT NULL,
-    record_content VARCHAR(20) NOT NULL,
-    record_value INT NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (plan_id) REFERENCES fat_loss_plan(plan_id)
-)
-
-
--- 判断运动记录表是否已经存在，不存在则创建
--- 记录ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 运动类型：字符串类型、长度为20、'室内跑步'、'室内健走'、'室内骑行'、'室外跑步'、'室外健走'、'室外骑行'、不可为空
--- 运动时间：日期时间类型、不可为空
--- 消耗能量：整数类型、不可为空
--- 运动距离：浮点数类型、不可为空
--- 运动时长：整数类型、不可为空
--- 运动轨迹：文本类型、可为空
--- 创建时间：日期时间类型，不可为空
-CREATE TABLE IF NOT EXISTS exercise_record (
-    exercise_record_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    exercise_type VARCHAR(20) NOT NULL,
-    exercise_time DATETIME NOT NULL,
-    calories_burned INT NOT NULL,
-    distance FLOAT NOT NULL,
-    duration INT NOT NULL,
-    exercise_track TEXT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id)
-);
-
-
--- 判断运动计划表是否已经存在，不存在则创建
--- 计划ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 减脂计划表ID：整数类型、外键，引用减脂计划表的主键
--- 运动类型：字符串类型、长度为20、'室内跑步'、'室内健走'、'室内骑行'、'室外跑步'、'室外健走'、'室外骑行'、不可为空
--- 运动时间：日期时间类型、不可为空
--- 运动距离：浮点数类型、不可为空
--- 运动时长：整数类型、不可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS exercise_plan (
-    exercise_plan_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    fat_loss_plan_id INT,
-    exercise_type VARCHAR(20) NOT NULL,
-    exercise_time DATETIME NOT NULL,
-    distance FLOAT NOT NULL,
-    duration INT NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (fat_loss_plan_id) REFERENCES fat_loss_plan(plan_id)
-)
-
-
--- 判断AI方案表是否已经存在，不存在则创建
--- 方案ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 计划表ID：整数类型、外键，引用减脂计划表的主键
--- 方案名称：字符串类型、长度为20、不可为空
--- 推荐摄入热量：整数类型、不可为空
--- 饮食记录表 ID：整数类型、外键，引用饮食记录表的主键
--- 运动计划表 ID：整数类型、外键，引用运动计划表的主键
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS ai_plan (
-    ai_plan_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    fat_loss_plan_id INT,
-    plan_name VARCHAR(20) NOT NULL,
-    recommended_calories INT NOT NULL,
-    diet_record_id INT,
-    exercise_plan_id INT,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (fat_loss_plan_id) REFERENCES fat_loss_plan(plan_id),
-    FOREIGN KEY (diet_record_id) REFERENCES diet_record(diet_record_id),
-    FOREIGN KEY (exercise_plan_id) REFERENCES exercise_plan(exercise_plan_id)
-)
-
-
--- 判断音乐表是否已经存在，不存在则创建
--- 音乐ID：主键、自增长、整数类型
--- 音乐名称：字符串类型、长度为20、不可为空
--- 音乐文件路径：字符串类型、长度为255、不可为空
--- 音乐时长：整数类型、不可为空、单位为 s
--- 音乐文件类型：子串串类型、长度为20、不可为空
--- 音乐文件大小：浮点数类型、不可为空
--- 音乐文件MD5：字符串类型、长度为32、不可为空
--- 音乐专辑封面：字符串类型、长度为255、可为空
--- 标签：字符串类型、长度为50、不可为空
--- 分类：字符串类型、长度为 5、不可为空
--- 收听量：整数类型、不可为空、默认为 0
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS music (
-    music_id INT AUTO_INCREMENT PRIMARY KEY,
-    music_name VARCHAR(20) NOT NULL,
-    music_file_path VARCHAR(255) NOT NULL,
-    music_duration INT NOT NULL,
-    music_file_type VARCHAR(20) NOT NULL,
-    music_file_size FLOAT NOT NULL,
-    music_file_md5 VARCHAR(32) NOT NULL,
-    music_album_cover VARCHAR(255) NULL,
-    tags VARCHAR(50) NOT NULL,
-    category VARCHAR(5) NOT NULL,
-    listen_count INT NOT NULL DEFAULT 0,
-    create_time DATETIME NOT NULL
-)
-
-
--- 判断收藏音乐表是否已经存在，不存在则创建
--- 收藏ID：主键、自增长、整数类型
--- 用户ID：整数类型、外键，引用用户表的主键
--- 音乐ID：整数类型、外键，引用音乐表的主键
--- 收藏时间：日期时间类型、不可为空
--- 创建时间：日期时间类型、不可为空
-CREATE TABLE IF NOT EXISTS favorite_music (
-    favorite_music_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    music_id INT,
-    favorite_time DATETIME NOT NULL,
-    create_time DATETIME NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(user_id),
-    FOREIGN KEY (music_id) REFERENCES music(music_id)
-)
+SET FOREIGN_KEY_CHECKS = 1;

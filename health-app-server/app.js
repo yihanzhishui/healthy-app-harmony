@@ -51,6 +51,10 @@ app.use('/diet', verifyToken, dietRecordRouter)
 const sportRecordRouter = require('./routes/sport/sport')
 app.use('/sport', verifyToken, sportRecordRouter)
 
+// 导入并使用音乐模块，需要token
+const musicRouter = require('./routes/music/music')
+app.use('/music', verifyToken, musicRouter)
+
 // 导入并使用获取验证码路由模块
 const verifyCodeRouter = require('./routes/verify_code/verify_code')
 app.use('/code', verifyCodeRouter)

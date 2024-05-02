@@ -90,7 +90,6 @@ const getAIFatLossPlan = async (req, res) => {
 /**
  * 采纳AI减脂方案，将数据存入数据库
  */
-// TODO 2024-4-30 23:15
 const adoptAIFatLossPlan = async (req, res) => {
     const { user_id } = req.body
     const connection = await db.getConnection()
@@ -237,6 +236,103 @@ const adoptAIFatLossPlan = async (req, res) => {
 }
 
 /**
+ * 获取最新一条运动记录
+ * 默认只查最近一条，支持分页查询
+ */
+const getLatestExercisePlan = async (req, res) => {
+    const { user_id } = req.body
+    page_number = req.body.page_number || 1
+    page_size = req.body.page_size || 1
+    let offset = (page_number - 1) * page_size
+    let limit = parseInt(page_size)
+    const connection = await db.getConnection()
+    try {
+        // 开启事务
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [results] = await connection.query(sql_check, [user_id])
+        if (results.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        // 查询运动记录
+        let sql = `SELECT *, 
+                        DATE_FORMAT(exercise_time, '%Y-%m-%d %H:%i:%s') AS exercise_time,
+                        DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS create_time
+                    FROM exercise_plan WHERE user_id = ? ORDER BY create_time DESC LIMIT ?, ?`
+        let [results_exercise_plan] = await connection.query(sql, [user_id, offset, limit])
+        if (results_exercise_plan.length === 0) {
+            send(res, 4003, '运动记录不存在')
+            return
+        }
+        send(res, 2000, '获取运动记录成功', results_exercise_plan)
+        logger.info(`用户 ${user_id} 获取运动记录成功`)
+        // 提交事务
+        await connection.commit()
+    } catch (error) {
+        // 回滚事务
+        await connection.rollback()
+        sendError(error, req, res, 4002, '获取运动记录失败')
+        logger.error(`用户 ${user_id} 获取运动记录失败`)
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
+ * 获取减脂计划记录
+ * 默认只查最近一条，支持分页查询
+ */
+const getFatLossPlan = async (req, res) => {
+    const { user_id } = req.body
+    page_number = req.body.page_number || 1
+    page_size = req.body.page_size || 1
+    let offset = (page_number - 1) * page_size
+    let limit = parseInt(page_size)
+    const connection = await db.getConnection()
+    try {
+        // 开启事务
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [results] = await connection.query(sql_check, [user_id])
+        if (results.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        // 查询减脂计划记录
+        let sql = `SELECT *,
+                        DATE_FORMAT(plan_start_time, '%Y-%m-%d %H:%i:%s') AS plan_start_time,
+                        DATE_FORMAT(plan_end_time, '%Y-%m-%d %H:%i:%s') AS plan_end_time,
+                        DATE_FORMAT(create_date, '%Y-%m-%d') AS create_date
+                    FROM fat_loss_plan WHERE user_id = ? ORDER BY create_date DESC LIMIT ?, ?`
+        let [results_ai_plan] = await connection.query(sql, [user_id, offset, limit])
+        if (results_ai_plan.length === 0) {
+            send(res, 4003, '减脂计划记录不存在')
+            return
+        }
+        send(res, 2000, '获取减脂计划记录成功', results_ai_plan)
+        logger.info(`用户 ${user_id} 获取减脂计划记录成功`)
+        // 提交事务
+        await connection.commit()
+    } catch (error) {
+        // 回滚事务
+        await connection.rollback()
+        sendError(error, req, res, 4002, '获取减脂计划记录失败')
+        logger.error(`用户 ${user_id} 获取减脂计划记录失败`)
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 计算年龄
  */
 function calculateAge(birthdate) {
@@ -275,4 +371,6 @@ function calculateAge(birthdate) {
 module.exports = {
     getAIFatLossPlan,
     adoptAIFatLossPlan,
+    getLatestExercisePlan,
+    getFatLossPlan,
 }
