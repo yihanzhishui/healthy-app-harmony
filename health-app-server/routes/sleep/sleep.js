@@ -19,7 +19,7 @@ const setNumberDay = (req, res, next) => {
     req.number = 1
     next()
 }
-router.get('/get_lastest_day_sleep_record', joiValidator(getSleepSchema), setNumberDay, getSleepRecord)
+router.get('/get_latest_day_sleep_record', joiValidator(getSleepSchema), setNumberDay, getSleepRecord)
 
 // 计算今天是本周的第几天
 const today = new Date()

@@ -18,10 +18,12 @@ const {
     deleteUser,
 } = require('../../controllers/user_controller')
 
+const { decrypt } = require('../../middleware/decrypt')
+
 /**
  * 用户注册
  */
-router.post('/register', joiValidator(registerSchema), register)
+router.post('/register', decrypt, joiValidator(registerSchema), register)
 
 /**
  * 使用短信验证码登录
@@ -36,7 +38,7 @@ router.post('/login_by_email_verification_code', joiValidator(loginByEmailCodeSc
 /**
  * 使用密码登录
  */
-router.post('/login_by_password', joiValidator(loginByPasswordSchema), loginByPassword)
+router.post('/login_by_password', joiValidator(loginByPasswordSchema), decrypt, loginByPassword)
 
 /**
  * 使用华为账号登录

@@ -86,8 +86,8 @@ const emailSchema = Joi.string().email().required()
  * 密码验证规则
  * 密码为字符串，长度必须在6到12位之间，不能包含空格，不能包含汉字，必填
  */
-const passwordSchema = Joi.string().regex(passwordPattern).required()
-const newPasswordSchema = Joi.string().regex(passwordPattern).required()
+const passwordSchema = Joi.string().required()
+const newPasswordSchema = Joi.string().required()
 
 /**
  * 确认密码验证规则
@@ -149,8 +149,6 @@ const loginByEmailCodeSchema = Joi.object({
  * 密码登录验证规则
  */
 const loginByPasswordSchema = Joi.object({
-    phone: phoneSchema,
-    email: emailSchema,
     password: passwordSchema,
 })
 
@@ -461,6 +459,18 @@ const getFavoriteMusicSchema = Joi.object({
 })
 
 // #endregion
+
+// #region 获取验证码相关验证
+
+const getSMSCodeSchema = Joi.object({
+    phone: phoneSchema,
+})
+
+const getEmailCodeSchema = Joi.object({
+    email: emailSchema,
+})
+
+// #endregion
 // 封装 Joi 验证为中间件
 const joiValidator = (schema) => {
     const extendedSchema = schema.clone().options({ allowUnknown: true })
@@ -517,5 +527,8 @@ module.exports = {
     getMusicSchema,
     handleFavoriteMusicSchema,
     getFavoriteMusicSchema,
+    // 获取验证码相关验证
+    getSMSCodeSchema,
+    getEmailCodeSchema,
     joiValidator,
 }

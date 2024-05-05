@@ -20,6 +20,8 @@ const {
     getUserBodyInfo,
 } = require('../../controllers/user_controller')
 
+const { decrypt } = require('../../middleware/decrypt')
+
 /**
  * 修改用户名
  */
@@ -28,7 +30,7 @@ router.put('/update_username', joiValidator(changeUsernameSchema), changeUsernam
 /**
  * 修改用户密码
  */
-router.put('/update_password', joiValidator(changePasswordSchema), changePassword)
+router.put('/update_password', joiValidator(changePasswordSchema), decrypt, changePassword)
 
 /**
  * 修改用户头像

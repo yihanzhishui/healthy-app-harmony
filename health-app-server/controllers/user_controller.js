@@ -4,6 +4,7 @@ const { logger_db: logger } = require('../utils/logger')
 const bcryptjs = require('bcryptjs')
 const TokenManager = require('../utils/token_manager')
 const redis = require('../utils/redis_manager')
+require('dotenv').config()
 
 const db_error = (res, err) => {
     logger.error('数据库查询出现错误：' + err.message)
@@ -102,7 +103,7 @@ const loginBySMSCode = async (req, res) => {
 
         if (results.length === 0) {
             await connection.rollback()
-            throw new Error('用户不存在')
+            send(res, 1001, '用户不存在')
         }
 
         const { user_id, password, salt, avatar, ...payload } = results[0] // 快速剔除敏感信息
@@ -118,12 +119,8 @@ const loginBySMSCode = async (req, res) => {
         if (connection) {
             await connection.rollback() // 失败时回滚事务
         }
-        if (error.message === '用户不存在') {
-            send(res, 1001, '用户不存在')
-        } else {
-            logger.error('数据库查询出现错误：' + error.message)
-            send(res, 500, '服务器内部错误')
-        }
+        logger.error('数据库查询出现错误：' + error.message)
+        send(res, 5000, '服务器内部错误')
     } finally {
         if (connection) {
             await releaseConnection(connection)
@@ -136,6 +133,7 @@ const loginBySMSCode = async (req, res) => {
  */
 const loginByEmailCode = async (req, res) => {
     const { email, email_code } = req.body
+    logger.info(`用户 ${email} 尝试通过邮箱验证码登录: ${email_code}`)
 
     const emailCodeRedis = await redis.get(email)
     if (emailCodeRedis !== email_code) {
@@ -204,8 +202,15 @@ const loginByEmailCode = async (req, res) => {
  * 处理密码登录
  */
 const loginByPassword = async (req, res) => {
-    const account = req.body.phone || req.body.email
+    const account = req.body.account
     const password = req.body.password
+
+    // 验证account是否正确，要么是国内手机号，要么是邮箱
+    if (!/^1[3-9]\d{9}$/.test(account) && !/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(account)) {
+        logger.info(`用户 ${account} 尝试通过账号密码登录, 账号格式错误 ${account}`)
+        send(res, 4002, '账号格式错误')
+        return
+    }
     const connection = await db.getConnection()
 
     try {
@@ -225,7 +230,7 @@ const loginByPassword = async (req, res) => {
 
         if (!passwordMatch) {
             await connection.rollback() // 密码错误，事务回滚
-            send(res, 4003, '密码错误')
+            send(res, 4002, '密码错误')
             return
         }
 
