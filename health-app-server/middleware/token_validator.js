@@ -12,7 +12,7 @@ const tokenManager = new TokenManager()
 async function verifyToken(req, res, next) {
     // if(req.header('Authorization'))
     try {
-        const token = req.header('Authorization').replace('Bearer ', '')
+        const token = req.header('authorization').toString().replace('Bearer ', '')
         if (!token) {
             send(res, 4003, '无效的 token')
             return

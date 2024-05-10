@@ -25,17 +25,17 @@ router.put('/add_to_diet_record', joiValidator(addToDietSchema), addToDietRecord
 /**
  * 根据饮食类型获取饮食记录
  */
-router.get('/get_diet_record_by_diet_type', joiValidator(getDietByTypeSchema), getDietRecordByType)
+router.get('/get_diet_record_by_diet_type', joiValidator(getDietByTypeSchema, true), getDietRecordByType)
 
 /**
  * 根据日期获取饮食记录
  */
-router.get('/get_diet_record_by_create_time', joiValidator(getDietByCreateTimeSchema), getDietRecordByCreateTime)
+router.get('/get_diet_record_by_create_time', joiValidator(getDietByCreateTimeSchema, true), getDietRecordByCreateTime)
 
 /**
  * 获取饮食推荐
  */
-router.get('/get_recommend_diet', joiValidator(getRecommendDietSchema), getRecommendDiet)
+router.get('/get_recommend_diet', joiValidator(getRecommendDietSchema, true), getRecommendDiet)
 
 /**
  * 将AI推荐饮食添加到饮食推荐记录表

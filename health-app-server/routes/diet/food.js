@@ -7,11 +7,11 @@ const { getFoodList, getFoodListByTag } = require('../../controllers/food_contro
 /**
  * 获取食物列表
  */
-router.get('/get_food_list', joiValidator(getFoodListSchema), getFoodList)
+router.get('/get_food_list', joiValidator(getFoodListSchema, true), getFoodList)
 
 /**
  * 根据标签获取食物列表
  */
-router.get('/get_food_list_by_tag', joiValidator(getFoodListByTagSchema), getFoodListByTag)
+router.get('/get_food_list_by_tag', joiValidator(getFoodListByTagSchema, true), getFoodListByTag)
 
 module.exports = router

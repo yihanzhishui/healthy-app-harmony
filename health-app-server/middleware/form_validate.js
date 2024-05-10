@@ -324,8 +324,6 @@ const addFoodSchema = Joi.object({})
  * - eat_quantity: 食物数量，必填
  * - calories_intak: 食物卡路里，必填
  */
-const foodListPattern =
-    /^\[\s*\{\s*"food_id"\s*:\s*\d+\s*,\s*"eat_time"\s*:\s*"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}"\s*,\s*"eat_quantity"\s*:\s*\d+\s*,\s*"calories_intake"\s*:\s*\d+(\.\d+)?\s*\}\s*(,\s*\{\s*"food_id"\s*:\s*\d+\s*,\s*"eat_time"\s*:\s*"\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}"\s*,\s*"eat_quantity"\s*:\s*\d+\s*,\s*"calories_intake"\s*:\s*\d+(\.\d+)?\s*\}\s*)*\]$/
 
 /**
  * 饮食类型验证规则
@@ -339,7 +337,7 @@ const dietTypePattern = /^(breakfast|lunch|dinner|extra_meal)$/
 const addToDietSchema = Joi.object({
     user_id: userIdSchema,
     diet_type: dietTypePattern,
-    food_list: Joi.string().regex(foodListPattern).required(),
+    // food_list: Joi.string().required(),
 })
 
 /**
@@ -348,7 +346,6 @@ const addToDietSchema = Joi.object({
 const getDietByTypeSchema = Joi.object({
     user_id: userIdSchema,
     diet_type: dietTypePattern,
-    eat_time: dateSchema,
 })
 
 /**
@@ -472,14 +469,21 @@ const getEmailCodeSchema = Joi.object({
 
 // #endregion
 // 封装 Joi 验证为中间件
-const joiValidator = (schema) => {
+const joiValidator = (schema, is_query = false) => {
     const extendedSchema = schema.clone().options({ allowUnknown: true })
 
     return (req, res, next) => {
-        const { error } = extendedSchema.validate(req.body)
+        let err
+        if (is_query) {
+            const { error } = extendedSchema.validate(req.query)
+            err = error
+        } else {
+            const { error } = extendedSchema.validate(req.body)
+            err = error
+        }
 
-        if (error) {
-            const [{ message, path }] = error.details
+        if (err) {
+            const [{ message, path }] = err.details
 
             // 构建错误信息并记录日志
             const errorMessage = `${path.join('.')} 输入有误: ${message}`

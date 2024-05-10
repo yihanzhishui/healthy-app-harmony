@@ -14,6 +14,7 @@ const addToDietRecord = async (req, res) => {
     let { user_id, diet_type, food_list } = req.body
     const connection = await db.getConnection()
     food_list = JSON.parse(food_list)
+    logger.info(food_list)
     try {
         // 开启事务
         await connection.beginTransaction()
@@ -63,7 +64,7 @@ const addToDietRecord = async (req, res) => {
 
         // 组合成功与失败的响应信息
         const combinedResponse = [...successRecords, ...failureRecords]
-        send(res, 200, '处理食物到饮食表请求完成', { res: combinedResponse })
+        send(res, 2000, '处理食物到饮食表请求完成', { res: combinedResponse })
         logger.info('处理食物到饮食表请求完成')
     } catch (error) {
         // 回滚事务
@@ -82,8 +83,11 @@ const addToDietRecord = async (req, res) => {
  * 多表联合查询：diet_record, food
  */
 const getDietRecordByType = async (req, res) => {
-    let { user_id, diet_type, eat_time } = req.body
+    let { user_id, diet_type, eat_time } = req.query
     if (!eat_time) eat_time = getTodayDate()
+    logger.info('+++++' + eat_time)
+    logger.info('+++++' + user_id)
+    logger.info('+++++' + diet_type)
     const connection = await db.getConnection()
     try {
         // 开启事务
@@ -94,7 +98,6 @@ const getDietRecordByType = async (req, res) => {
         if (results.length === 0) {
             send(res, 2000, '用户不存在')
             logger.info('用户不存在')
-            connection.release()
             return
         }
         // 获取饮食记录
@@ -121,7 +124,6 @@ const getDietRecordByType = async (req, res) => {
         if (results.length === 0) {
             send(res, 2000, '饮食记录为空')
             logger.info('饮食记录为空')
-            connection.release()
             return
         }
 
@@ -136,20 +138,26 @@ const getDietRecordByType = async (req, res) => {
             calories_intake: record.calories_intake,
         }))
 
+        // 计算总热量
+        let totalCalories = 0
+        for (let i = 0; i < foodList.length; i++) {
+            totalCalories += foodList[i].calories_intake
+        }
+
         // 提交事务（如果是在事务中的话）
         await connection.commit()
-        send(res, 200, '获取饮食记录成功', { diet_food_record: foodList })
+        send(res, 2000, '获取饮食记录成功', { diet_food_record: foodList, total_calories: totalCalories })
         logger.info('获取饮食记录成功')
     } catch (error) {
         // 回滚事务
         await connection.rollback()
         sendError(error, req, res, 5000, '获取饮食记录失败')
         logger.error('获取饮食记录失败')
-        return
     } finally {
         if (connection) {
             await releaseConnection(connection)
         }
+        return
     }
 }
 
@@ -208,7 +216,7 @@ const getDietRecordByCreateTime = async (req, res) => {
 
         // 提交事务（如果是在事务中的话）
         await connection.commit()
-        send(res, 200, '获取饮食记录成功', { diet_food_record: foodList })
+        send(res, 2000, '获取饮食记录成功', { diet_food_record: foodList })
         logger.info('获取饮食记录成功')
         return
     } catch {
