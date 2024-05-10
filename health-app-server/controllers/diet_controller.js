@@ -51,7 +51,7 @@ const addToDietRecord = async (req, res) => {
                 user_id,
                 diet_type,
                 food.food_id,
-                food.eat_time,
+                getTodayDate(),
                 food.eat_quantity,
                 food.calories_intake,
             ])
@@ -365,6 +365,37 @@ const addToRecommendedDietRecord = async (req, res) => {
 }
 
 /**
+ * 获取今日热量摄入
+ */
+const getTodayCalories = async (req, res) => {
+    const { user_id } = req.query
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction()
+        // 查询今日饮食推荐记录
+        let sql = `SELECT SUM(calories_intake) AS total_calories FROM diet_record WHERE user_id = ? AND create_time LIKE ?`
+        let [results] = await connection.query(sql, [user_id, getTodayDate() + '%'])
+        if (results.length === 0) {
+            send(res, 2000, '查询成功', { total_calories: 0 })
+            return
+        } else {
+            send(res, 2000, '查询成功', { total_calories: results[0].total_calories })
+            return
+        }
+    } catch (error) {
+        // 回滚事务
+        await connection.rollback()
+        sendError(error, req, res, 4002, '查询今日热量摄入失败')
+        logger.error('查询今日热量摄入失败')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 获取今天的日期
  */
 function getTodayDate() {
@@ -382,4 +413,5 @@ module.exports = {
     getDietRecordByCreateTime,
     getRecommendDiet,
     addToRecommendedDietRecord,
+    getTodayCalories,
 }

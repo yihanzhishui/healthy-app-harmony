@@ -7,6 +7,7 @@ const {
     getDietByCreateTimeSchema,
     getRecommendDietSchema,
     addToRecommendedDietSchema,
+    getTodayCaloriesSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
@@ -15,6 +16,7 @@ const {
     getDietRecordByCreateTime,
     getRecommendDiet,
     addToRecommendedDietRecord,
+    getTodayCalories,
 } = require('../../controllers/diet_controller')
 
 /**
@@ -41,6 +43,11 @@ router.get('/get_recommend_diet', joiValidator(getRecommendDietSchema, true), ge
  * 将AI推荐饮食添加到饮食推荐记录表
  */
 router.put('/add_to_recommended_diet_record', joiValidator(addToRecommendedDietSchema), addToRecommendedDietRecord)
+
+/**
+ * 获取今日摄入热量
+ */
+router.get('/get_today_calories', joiValidator(getTodayCaloriesSchema, true), getTodayCalories)
 
 // 导出路由实例
 module.exports = router

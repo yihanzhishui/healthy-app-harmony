@@ -56,7 +56,7 @@ router.put('/update_user_body_info', joiValidator(updateUserBodyInfoSchema), upd
 /**
  * 获取身高、体重、生日、性别
  */
-router.get('/get_user_body_info', joiValidator(updateUserBodyInfoSchema), getUserBodyInfo)
+router.get('/get_user_body_info', joiValidator(updateUserBodyInfoSchema, true), getUserBodyInfo)
 
 // 导出路由实例
 module.exports = router

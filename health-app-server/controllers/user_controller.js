@@ -664,7 +664,7 @@ const updateUserBodyInfo = async (req, res) => {
  * 处理获取身高、体重、生日、性别
  */
 const getUserBodyInfo = async (req, res) => {
-    const { user_id } = req.body
+    const { user_id } = req.query
     const connection = await db.getConnection()
     try {
         await connection.beginTransaction() // 开始事务

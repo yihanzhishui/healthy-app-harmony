@@ -332,6 +332,13 @@ const addFoodSchema = Joi.object({})
 const dietTypePattern = /^(breakfast|lunch|dinner|extra_meal)$/
 
 /**
+ * 获取今日摄入热量验证规则
+ */
+const getTodayCaloriesSchema = Joi.object({
+    user_id: userIdSchema,
+})
+
+/**
  * 添加到饮食记录验证规则
  */
 const addToDietSchema = Joi.object({
@@ -521,6 +528,7 @@ module.exports = {
     getDietByCreateTimeSchema,
     getRecommendDietSchema,
     addToRecommendedDietSchema,
+    getTodayCaloriesSchema,
     // 运动减脂相关验证
     getAIFatLossPlanSchema,
     adoptAIFatLossPlanSchema,
