@@ -140,7 +140,7 @@ function selectTemplate(question, question_base_data, food_list_json) {
         "exercise": { // 运动
             "indoor_running": { // 室内跑步
                 "exercise_type": "indoor_running", // 运动方案名称
-                "exercise_time": "00:00:00", // 推荐运动时间（每天的什么时候）
+                "exercise_time": "00:00", // 推荐运动时间（每天的什么时候）
                 "duration": 180, // 运动时长
                 "distance": 1000 // 推荐运动距离
             },

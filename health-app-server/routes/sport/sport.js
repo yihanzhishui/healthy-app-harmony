@@ -18,12 +18,12 @@ const {
 /**
  * 获取AI减脂方案
  */
-router.get('/get_ai_plan', joiValidator(getAIFatLossPlanSchema), getAIFatLossPlan)
+router.get('/get_ai_plan', joiValidator(getAIFatLossPlanSchema, true), getAIFatLossPlan)
 
 /**
  * 采纳AI减脂方案
  */
-router.get('/adopt_ai_fat_loss_plan', joiValidator(adoptAIFatLossPlanSchema), adoptAIFatLossPlan)
+router.get('/adopt_ai_fat_loss_plan', joiValidator(adoptAIFatLossPlanSchema, true), adoptAIFatLossPlan)
 
 /**
  * 获取运动方案

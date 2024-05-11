@@ -9,7 +9,7 @@ const redis = require('../utils/redis_manager')
  * 处理获取AI减脂方案
  */
 const getAIFatLossPlan = async (req, res) => {
-    const { user_id, focus_area, target_weight, reduction_speed, ...other } = req.body
+    const { user_id, focus_area, target_weight, reduction_speed, ...other } = req.query
     const connection = await db.getConnection()
     try {
         // 开启事务
@@ -91,7 +91,7 @@ const getAIFatLossPlan = async (req, res) => {
  * 采纳AI减脂方案，将数据存入数据库
  */
 const adoptAIFatLossPlan = async (req, res) => {
-    const { user_id } = req.body
+    const { user_id } = req.query
     const connection = await db.getConnection()
     try {
         // 开启事务
