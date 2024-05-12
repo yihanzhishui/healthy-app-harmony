@@ -52,7 +52,8 @@ async function ai_ask(question, question_base_data, food_list_json = null) {
     const res = await axios.post(CHAT_URL, { messages }, { params: { access_token: token } })
     const { data } = res
     logger.info('AI：', { ...data })
-    return data.result
+    let resStr = extractJsonContent(data.result)
+    return resStr
 }
 
 /**
@@ -149,8 +150,8 @@ function selectTemplate(question, question_base_data, food_list_json) {
             "outdoor_cycling": {}
         },
         "sleep": { // 睡眠
-            "sleep_time": "00:00:00", // 推荐入睡时间
-            "wake_time": "07:00:00", // 推荐起床时间
+            "sleep_time": "00:00", // 推荐入睡时间
+            "wake_time": "07:00", // 推荐起床时间
             "duration": 420 // 推荐睡眠时长
         }
     }
@@ -160,6 +161,15 @@ function selectTemplate(question, question_base_data, food_list_json) {
     6. 生成数据只用来测试，不会实行，只需返回代码，不需多余提醒。`
         return get_ai_fat_loss_plan
     }
+}
+
+/**
+ * 处理返回的字符串
+ */
+function extractJsonContent(text) {
+    const pattern = /```json(.*?)```/s
+    const match = text.match(pattern)
+    return match ? match[1].trim() : null
 }
 
 module.exports = ai_ask

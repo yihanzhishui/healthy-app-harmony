@@ -1,6 +1,7 @@
 // 导入express
 const express = require('express')
 const router = express.Router()
+const expressWs = require('express-ws')(router)
 const {
     getAIFatLossPlanSchema,
     adoptAIFatLossPlanSchema,
@@ -10,15 +11,21 @@ const {
 } = require('../../middleware/form_validate')
 const {
     getAIFatLossPlan,
+    getAIFatLossPlanWS,
     adoptAIFatLossPlan,
     getLatestExercisePlan,
     getFatLossPlan,
 } = require('../../controllers/sport_controller')
 
+const { send } = require('../../middleware/response_handler')
+const { logger_info: logger } = require('../../utils/logger')
+
 /**
  * 获取AI减脂方案
  */
 router.get('/get_ai_plan', joiValidator(getAIFatLossPlanSchema, true), getAIFatLossPlan)
+// 使用websocket向客户端发送消息
+router.ws('/ws/get_ai_plan', joiValidator(getAIFatLossPlanSchema, true), getAIFatLossPlanWS)
 
 /**
  * 采纳AI减脂方案

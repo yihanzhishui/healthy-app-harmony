@@ -9,7 +9,8 @@ const redis = require('../utils/redis_manager')
  * 处理获取AI减脂方案
  */
 const getAIFatLossPlan = async (req, res) => {
-    const { user_id, focus_area, target_weight, reduction_speed, ...other } = req.query
+    logger.info('用户请求获取AI减脂方案http: ' + JSON.stringify(req.query))
+    const { user_id, focus_area, target_weight, reduction_speed, height, weight, gender, ...other } = req.query
     const connection = await db.getConnection()
     try {
         // 开启事务
@@ -32,14 +33,23 @@ const getAIFatLossPlan = async (req, res) => {
         // 从user_info中获取用户信息
         sql = `SELECT * , DATE_FORMAT(birthday, '%Y-%m-%d') AS formatted_birthday FROM user_info WHERE user_id = ?`
         let [userInfoResults] = await connection.query(sql, [user_id])
-        if (userInfoResults.length === 0) {
-            send(res, 4003, '用户信息不存在')
-            return
-        }
-        const { height, weight, gender, formatted_birthday: birthday } = userInfoResults[0]
-        const bmi = parseFloat((weight / ((height / 100) * (height / 100))).toFixed(2))
+
+        const { height: height_db, weight: weight_db, gender, formatted_birthday: birthday_db } = userInfoResults[0]
+        const bmi = parseFloat(
+            (
+                (weight ?? weight_db ?? 65) /
+                (((height ?? height_db ?? 170) / 100) * (height ?? height_db ?? 170))
+            ).toFixed(2)
+        )
         // 询问基础数据---用户身体信息
-        let user_info_json = JSON.stringify({ height, weight, bmi, gender, age: calculateAge(birthday), ...other })
+        let user_info_json = JSON.stringify({
+            height: height ?? height_db ?? 170,
+            weight: weight ?? weight_db ?? 65,
+            bmi,
+            gender: gender ?? 1,
+            age: calculateAge(birthday_db) ?? 20,
+            ...other,
+        })
         let recommend_fat_loss_plan_ai_json = await ai_ask(
             QUESTION.GET_AI_FAT_LOSS_PLAN,
             user_info_json,
@@ -71,13 +81,118 @@ const getAIFatLossPlan = async (req, res) => {
         recommend_fat_loss_plan_ai_json = JSON.stringify(recommend_fat_loss_plan_ai)
         // 暂存至redis
         await redis.set(AI_ANSWER_KEY_FAT_LOSS + user_id, recommend_fat_loss_plan_ai_json)
-        send(res, 200, '获取AI减脂方案成功', { ...recommend_fat_loss_plan_ai })
+        send(res, 2000, '获取AI减脂方案成功', { ...recommend_fat_loss_plan_ai })
         await connection.commit()
         logger.info(`用户 ${user_id} 获取AI减脂方案成功`)
     } catch (error) {
         // 回滚事务
         await connection.rollback()
         sendError(error, req, res, 4002, '获取AI减脂方案失败')
+        logger.error('获取AI减脂方案失败')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+        return
+    }
+}
+
+// WebSocket处理函数
+const getAIFatLossPlanWS = async (ws, req) => {
+    logger.info('用户请求获取AI减脂方案: ' + req.query)
+    const { user_id, focus_area, target_weight, reduction_speed, height, weight, gender, ...other } = req.query
+    const connection = await db.getConnection()
+    try {
+        // 开启事务
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [results] = await connection.query(sql_check, [user_id])
+        if (results.length === 0) {
+            ws.send(JSON.stringify({ status: 'fail', code: 4004, message: '用户不存在' }))
+            logger.info('用户不存在')
+            return
+        }
+        // 获取食物列表的 food_id、food_name、food_image、calories
+        // 获取一个4以内的随机数
+        let offset = Math.floor(Math.random() * 4)
+        let sql_food = `SELECT food_id, food_name, food_image, calories FROM food LIMIT ${offset}, 6`
+        let [foodList] = await connection.query(sql_food)
+        // 询问基础数据---食物参考列表
+        let food_list_json = JSON.stringify(foodList)
+        // 从user_info中获取用户信息
+        sql = `SELECT * , DATE_FORMAT(birthday, '%Y-%m-%d') AS formatted_birthday FROM user_info WHERE user_id = ?`
+        let [userInfoResults] = await connection.query(sql, [user_id])
+
+        const {
+            height: height_db,
+            weight: weight_db,
+            gender: gender_db,
+            formatted_birthday: birthday_db,
+        } = userInfoResults[0]
+        const bmi = parseFloat(
+            ((weight ?? weight_db) / (((height ?? height_db) / 100) * ((height ?? height_db) / 100))).toFixed(2)
+        )
+        // 询问基础数据---用户身体信息
+        let user_info_json = JSON.stringify({
+            height: height ?? height_db ?? 170,
+            weight: weight ?? weight_db ?? 65,
+            bmi,
+            gender: gender ?? gender_db ?? 1,
+            age: calculateAge(birthday_db) ?? 20,
+            ...other,
+        })
+        let recommend_fat_loss_plan_ai_json = await ai_ask(
+            QUESTION.GET_AI_FAT_LOSS_PLAN,
+            user_info_json,
+            food_list_json
+        )
+        recommend_fat_loss_plan_ai_json = recommend_fat_loss_plan_ai_json.replace(/^\s*```json\s*\n|```$/gm, '')
+        // 格式化
+        let recommend_fat_loss_plan_ai = JSON.parse(recommend_fat_loss_plan_ai_json)
+
+        // 将数据插入到数据库中
+        sql = `INSERT INTO 
+        fat_loss_plan 
+        (user_id, plan_name, target_weight, reduction_speed, focus_area, plan_cycle,
+            plan_start_time, plan_end_time, create_date) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`
+
+        let [results_plan] = await connection.query(sql, [
+            user_id,
+            recommend_fat_loss_plan_ai.plan_name,
+            target_weight,
+            reduction_speed,
+            focus_area,
+            recommend_fat_loss_plan_ai.plan_cycle,
+            recommend_fat_loss_plan_ai.plan_start_time,
+            recommend_fat_loss_plan_ai.plan_end_time,
+        ])
+        let plan_id = results_plan.insertId
+        recommend_fat_loss_plan_ai.fat_loss_plan_id = plan_id
+        recommend_fat_loss_plan_ai_json = JSON.stringify(recommend_fat_loss_plan_ai)
+        // 暂存至redis
+        await redis.set(AI_ANSWER_KEY_FAT_LOSS + user_id, recommend_fat_loss_plan_ai_json)
+        ws.send(
+            JSON.stringify({
+                status: 'success',
+                code: 2000,
+                message: '获取AI减脂方案成功',
+                data: { ...recommend_fat_loss_plan_ai },
+            })
+        )
+        await connection.commit()
+        logger.info(`用户 ${user_id} 获取AI减脂方案成功`)
+    } catch (error) {
+        // 回滚事务
+        await connection.rollback()
+        ws.send(
+            JSON.stringify({
+                status: 'fail',
+                code: 4002,
+                message: '获取AI减脂方案失败',
+            })
+        )
         logger.error('获取AI减脂方案失败')
     } finally {
         if (connection) {
@@ -370,6 +485,7 @@ function calculateAge(birthdate) {
 
 module.exports = {
     getAIFatLossPlan,
+    getAIFatLossPlanWS,
     adoptAIFatLossPlan,
     getLatestExercisePlan,
     getFatLossPlan,

@@ -48,7 +48,7 @@ const timePattern = /^\d{2}:\d{2}:\d{2}$/
 /**
  * 身体形态正则
  */
-const bodyShapePattern = /苹果型|梨型|三角型|匀称型|辣椒型|沙漏型/
+const bodyShapePattern = /苹果型|梨型|三角型|匀称型|辣椒型|沙漏型|无/
 
 /**
  * 运动经验正则
