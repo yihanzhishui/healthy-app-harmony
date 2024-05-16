@@ -29,21 +29,19 @@ const base64Pattern =
     /^(data:image\/(png|jpg|jpeg|gif|bmp|webp|svg\+xml);base64,)([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/
 
 /**
- * 日期时间格式正则
- * 示例：2024-01-01 00:00:00
+ * 日期时间格式正则，允许月份、日期、小时、分钟、秒为单个数字
  */
-const dateTimeimePattern = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+const dateTimePattern = /^\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}$/
 
 /**
- * 日期格式正则
- * 示例：2024-01-01
+ * 日期格式正则，允许月份、日期为单个数字
  */
-const datePattern = /^\d{4}-\d{2}-\d{2}$/
+const datePattern = /^\d{4}-\d{1,2}-\d{1,2}$/
 
 /**
- * 时间格式正则
+ * 时间格式正则，允许小时、分钟、秒为单个数字
  */
-const timePattern = /^\d{2}:\d{2}:\d{2}$/
+const timePattern = /^\d{1,2}:\d{1,2}:\d{1,2}$/
 
 /**
  * 身体形态正则
@@ -214,7 +212,7 @@ const changeAvatarSchema = Joi.object({
 /**
  * 日期时间格式验证规则
  */
-const dateTimeSchema = Joi.string().regex(dateTimeimePattern).required()
+const dateTimeSchema = Joi.string().regex(dateTimePattern).required()
 
 /**
  * 日期格式验证规则
@@ -232,36 +230,36 @@ const timeSchema = Joi.string().regex(timePattern).required()
 const sleepTimeSchema = Joi.object({
     user_id: userIdSchema,
     bed_time: dateTimeSchema,
-    sleep_interval: Joi.number().integer().positive().required(),
+    sleep_interval: Joi.number().integer().required(),
     wake_time: dateTimeSchema,
-    wake_up_interval: Joi.number().integer().positive().required(),
-    record_time: dateTimeSchema,
+    wake_up_interval: Joi.number().integer().required(),
+    record_time: dateSchema,
 
     // 添加自定义验证
 })
-    .custom((value, helpers) => {
-        const { bed_time, wake_time, sleep_interval } = value
+// .custom((value, helpers) => {
+//     const { bed_time, wake_time, sleep_interval } = value
 
-        // 将时间字符串转换为Date对象
-        const bedTime = new Date(bed_time.replace(/-/g, '/')) // 注意：Date解析可能需要替换 '-' 为 '/'
-        const wakeTime = new Date(wake_time.replace(/-/g, '/'))
+//     // 将时间字符串转换为Date对象
+//     const bedTime = new Date(bed_time.replace(/-/g, '/')) // 注意：Date解析可能需要替换 '-' 为 '/'
+//     const wakeTime = new Date(wake_time.replace(/-/g, '/'))
 
-        // 计算实际睡着时间
-        const actualSleepStartTime = new Date(wakeTime.getTime() - sleep_interval * 60 * 1000)
+//     // 计算实际睡着时间
+//     const actualSleepStartTime = new Date(wakeTime.getTime() - sleep_interval * 60 * 1000)
 
-        // 验证实际睡着时间是否晚于或等于上床时间
-        if (actualSleepStartTime >= bedTime) {
-            return value // 验证通过
-        } else {
-            return helpers.error('time.interval', {
-                message: '醒来时间不能晚于上床时间 + 睡眠间隔',
-            })
-        }
-    })
-    .messages({
-        // 添加自定义错误消息
-        'time.interval': '{{#label}}: 醒来时间不能晚于上床时间 + 睡眠间隔',
-    })
+//     // 验证实际睡着时间是否晚于或等于上床时间
+//     if (actualSleepStartTime >= bedTime) {
+//         return value // 验证通过
+//     } else {
+//         return helpers.error('time.interval', {
+//             message: '醒来时间不能晚于上床时间 + 睡眠间隔',
+//         })
+//     }
+// })
+// .messages({
+//     // 添加自定义错误消息
+//     'time.interval': '{{#label}}: 醒来时间不能晚于上床时间 + 睡眠间隔',
+// })
 
 /**
  * 获取最新一条睡眠情况的数据验证规则

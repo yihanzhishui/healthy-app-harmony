@@ -84,7 +84,7 @@ const recordSleep = async (req, res) => {
             },
         }
 
-        send(res, responseData.code, responseData.message, responseData.data)
+        send(res, responseData.code, responseData.message, responseData.data.insertedRecord)
     } catch (error) {
         await connection.rollback()
         logger.error('数据库操作出现错误:', error)
@@ -102,7 +102,7 @@ const recordSleep = async (req, res) => {
  * @param {number} num 获取几条
  */
 const getSleepRecord = async (req, res) => {
-    const user_id = req.body.user_id
+    const user_id = req.query.user_id
     const number = req.number || 7 // 默认获取本周
     const connection = await db.getConnection()
 
@@ -115,28 +115,36 @@ const getSleepRecord = async (req, res) => {
         } else {
             startDateStr = getStartOfWeekStr()
         }
-
         let sql = `SELECT 
             *, 
             DATE_FORMAT(bed_time, '%Y-%m-%d %H:%i:%s') AS formatted_bed_time, 
             DATE_FORMAT(wake_time, '%Y-%m-%d %H:%i:%s') AS formatted_wake_time,
-            DATE_FORMAT(record_time, '%Y-%m-%d %H:%i:%s') AS formatted_sleep_time,
-            DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS formatted_create_time
+            DATE_FORMAT(record_time, '%Y-%m-%d') AS formatted_record_time,
+            DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s') AS formatted_create_time,
+            DATE_FORMAT(sleep_time, '%Y-%m-%d %H:%i:%s') AS formatted_sleep_time,
+            DATE_FORMAT(wake_up_time, '%Y-%m-%d %H:%i:%s') AS formatted_wake_up_time
             FROM sleep_record 
-            WHERE user_id = ? AND create_time >= ?
+            WHERE user_id = ? AND record_time >= ?
             ORDER BY record_time DESC 
             LIMIT ?`
 
         // 如果number为1，只获取一条记录；否则获取本周所有记录
         const limit = number === 1 ? 1 : number
         let [results] = await connection.query(sql, [user_id, startDateStr, limit])
+        let averageSleepTime
+        let averageData = calculateAverageTimes(results)
         if (results) {
+            // 从results数组中取得sleep_duration计算平均睡眠时间
+            averageSleepTime =
+                results.reduce((acc, cur) => {
+                    return acc + cur.sleep_duration
+                }, 0) / results.length
             results.forEach((result) => {
                 result.bed_time = result.formatted_bed_time
                 result.wake_time = result.formatted_wake_time
                 result.sleep_time = result.formatted_sleep_time
-                result.wake_up_time = result.formatted_create_time // 确保字段名正确
-                result.record_time = result.formatted_create_time
+                result.wake_up_time = result.formatted_wake_up_time
+                result.record_time = result.formatted_record_time
                 result.create_time = result.formatted_create_time
                 result.bed_time_duration = convertMinutesToTimeObject(result.bed_time_duration)
                 result.sleep_duration = convertMinutesToTimeObject(result.sleep_duration)
@@ -146,12 +154,18 @@ const getSleepRecord = async (req, res) => {
                 delete result.formatted_wake_time
                 delete result.formatted_sleep_time
                 delete result.formatted_create_time
+                delete result.formatted_record_time
+                delete result.formatted_wake_up_time
             })
         }
 
         let message = number === 1 ? '获取当天睡眠记录成功' : '获取本周睡眠记录成功'
         logger.info(`用户 ${user_id} ${message}`)
-        send(res, 2000, message, results)
+        send(res, 2000, message, {
+            results,
+            averageSleepTime: convertMinutesToTimeObject(averageSleepTime),
+            averageData,
+        })
     } catch (error) {
         logger.error('数据库操作出现错误：' + error.message)
         send(res, 5001, '服务器内部错误')
@@ -248,6 +262,55 @@ const getStartOfWeekStr = () => {
     const startOfWeek = new Date(today.setDate(today.getDate() - diff)) // 设置日期为本周一
     const startOfWeekStr = startOfWeek.toISOString().split('T')[0] // 转换为ISO格式日期字符串用于SQL查询
     return startOfWeekStr
+}
+
+/**
+ * 计算平均时间
+ */
+const calculateAverageTimes = (records) => {
+    if (records.length === 0) return {}
+
+    // 函数：提取时间部分并转换为分钟数
+    const extractTimeInMinutes = (datetime) => {
+        const [hours, minutes, seconds] = datetime.split(' ')[1].split(':').map(Number)
+        return hours * 60 + minutes + seconds / 60
+    }
+
+    // 函数：提取日期时间部分并转换为时间戳（毫秒数）
+    const extractTimestamp = (datetime) => {
+        return new Date(datetime).getTime()
+    }
+
+    // 函数：计算平均时间部分并返回字符串 HH:mm:ss
+    const calculateAverageTime = (timeArray) => {
+        const averageMinutes = timeArray.reduce((sum, time) => sum + time, 0) / timeArray.length
+        const averageHours = Math.floor(averageMinutes / 60)
+        const averageMinutesPart = Math.floor(averageMinutes % 60)
+        const averageSecondsPart = Math.round((averageMinutes - Math.floor(averageMinutes)) * 60)
+        return `${String(averageHours).padStart(2, '0')}:${String(averageMinutesPart).padStart(2, '0')}:${String(
+            averageSecondsPart
+        ).padStart(2, '0')}`
+    }
+
+    // 函数：计算平均时间戳并返回日期时间字符串
+    const calculateAverageTimestamp = (timestampArray) => {
+        const averageTimestamp = timestampArray.reduce((sum, time) => sum + time, 0) / timestampArray.length
+        const averageDate = new Date(averageTimestamp)
+        return averageDate.toISOString().slice(0, 19).replace('T', ' ')
+    }
+
+    // 提取并计算各字段的平均值
+    const sleepTimes = records.map((record) => extractTimeInMinutes(record.formatted_sleep_time))
+    const bedTimes = records.map((record) => extractTimeInMinutes(record.formatted_bed_time))
+    const wakeTimes = records.map((record) => extractTimeInMinutes(record.formatted_wake_time))
+    const wakeUpTimes = records.map((record) => extractTimeInMinutes(record.formatted_wake_up_time))
+
+    return {
+        averageSleepTime: calculateAverageTime(sleepTimes),
+        averageBedTime: calculateAverageTime(bedTimes),
+        averageWakeTime: calculateAverageTime(wakeTimes),
+        averageWakeUpTime: calculateAverageTime(wakeUpTimes),
+    }
 }
 
 module.exports = {

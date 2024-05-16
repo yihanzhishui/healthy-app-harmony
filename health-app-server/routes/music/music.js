@@ -30,12 +30,12 @@ router.get('/get_all_music_info', getAllMusicInfo)
 /**
  * 根据音乐分类获取音乐基本信息
  */
-router.get('/get_music_info_by_category', joiValidator(getMusicInfoByCategorySchema), getMusicInfoByCategory)
+router.get('/get_music_info_by_category', joiValidator(getMusicInfoByCategorySchema, true), getMusicInfoByCategory)
 
 /**
  * 获取音乐具体信息
  */
-router.get('/get_music', joiValidator(getMusicSchema), getMusic)
+router.get('/get_music', joiValidator(getMusicSchema, true), getMusic)
 
 /**
  * 添加音乐到收藏夹
@@ -45,7 +45,11 @@ router.put('/handle_favorite_music', joiValidator(handleFavoriteMusicSchema), ha
 /**
  * 根据用户ID获取收藏夹音乐列表
  */
-router.get('/get_favorite_music_list_by_user_id', joiValidator(getFavoriteMusicSchema), getFavoriteMusicListByUserId)
+router.get(
+    '/get_favorite_music_list_by_user_id',
+    joiValidator(getFavoriteMusicSchema, true),
+    getFavoriteMusicListByUserId
+)
 
 // 导出路由实例
 module.exports = router

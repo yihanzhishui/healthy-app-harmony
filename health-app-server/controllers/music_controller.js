@@ -136,7 +136,7 @@ const getMusicInfoByCategory = async (req, res) => {
  * 获取音乐具体信息
  */
 const getMusic = async (req, res) => {
-    const { user_id, music_id } = req.body
+    const { user_id, music_id } = req.query
     const connection = await db.getConnection()
     try {
         let sql = `SELECT 

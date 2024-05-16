@@ -19,7 +19,7 @@ const setNumberDay = (req, res, next) => {
     req.number = 1
     next()
 }
-router.get('/get_latest_day_sleep_record', joiValidator(getSleepSchema), setNumberDay, getSleepRecord)
+router.get('/get_latest_day_sleep_record', joiValidator(getSleepSchema, true), setNumberDay, getSleepRecord)
 
 // 计算今天是本周的第几天
 const today = new Date()
@@ -29,7 +29,7 @@ dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
 /**
  * 获取本周睡眠数据
  */
-router.get('/get_this_week_sleep_record', joiValidator(getSleepSchema), getSleepRecord)
+router.get('/get_this_week_sleep_record', joiValidator(getSleepSchema, true), getSleepRecord)
 
 // 导出路由实例
 module.exports = router
