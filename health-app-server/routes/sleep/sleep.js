@@ -2,7 +2,7 @@
 const express = require('express')
 const router = express.Router()
 const { sleepTimeSchema, getSleepSchema, joiValidator } = require('../../middleware/form_validate')
-const { recordSleep, getSleepRecord } = require('../../controllers/sleep_controller')
+const { recordSleep, getSleepRecord, getTodaySleepDuration } = require('../../controllers/sleep_controller')
 
 /**
  * 记录睡眠
@@ -30,6 +30,11 @@ dayOfWeek = dayOfWeek === 0 ? 7 : dayOfWeek
  * 获取本周睡眠数据
  */
 router.get('/get_this_week_sleep_record', joiValidator(getSleepSchema, true), getSleepRecord)
+
+/**
+ * 获取今日睡眠时长
+ */
+router.get('/get_today_sleep_duration', joiValidator(getSleepSchema, true), getTodaySleepDuration)
 
 // 导出路由实例
 module.exports = router

@@ -8,6 +8,7 @@ const {
     bindEmailSchema,
     bindHuaweiAccountSchema,
     updateUserBodyInfoSchema,
+    getUserAccountInfoSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
@@ -18,6 +19,7 @@ const {
     bindHuaweiAccount,
     updateUserBodyInfo,
     getUserBodyInfo,
+    getUserAccountInfo,
 } = require('../../controllers/user_controller')
 
 const { decrypt } = require('../../middleware/decrypt')
@@ -57,6 +59,11 @@ router.put('/update_user_body_info', joiValidator(updateUserBodyInfoSchema), upd
  * 获取身高、体重、生日、性别
  */
 router.get('/get_user_body_info', joiValidator(updateUserBodyInfoSchema, true), getUserBodyInfo)
+
+/**
+ * 获取用户账号信息
+ */
+router.get('/get_user_account_info', joiValidator(getUserAccountInfoSchema, true), getUserAccountInfo)
 
 // 导出路由实例
 module.exports = router

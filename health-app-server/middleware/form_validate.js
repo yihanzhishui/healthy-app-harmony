@@ -203,8 +203,16 @@ const deleteUserSchema = Joi.object({
  */
 const changeAvatarSchema = Joi.object({
     user_id: userIdSchema,
-    avatar: avatarSchema,
+    // avatar: avatarSchema,
 })
+
+/**
+ * 获取用户账户信息验证规则
+ */
+const getUserAccountInfoSchema = Joi.object({
+    user_id: userIdSchema,
+})
+
 // #endregion
 
 // #region 睡眠相关验证
@@ -514,6 +522,7 @@ module.exports = {
     deleteUserSchema,
     bindEmailSchema,
     updateUserBodyInfoSchema,
+    getUserAccountInfoSchema,
     // 睡眠相关验证
     sleepTimeSchema,
     getSleepSchema,

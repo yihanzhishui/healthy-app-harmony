@@ -49,8 +49,8 @@ const register = async (req, res) => {
             sqlStatement = `UPDATE user SET password = ?, salt = ?, is_deleted = '0' WHERE phone = ?`
             sqlParams = [hashedPassword, salt, phone]
         } else {
-            sqlStatement = `INSERT INTO user (phone, password, salt, is_deleted) VALUES (?, ?, ?, '0')`
-            sqlParams = [phone, hashedPassword, salt]
+            sqlStatement = `INSERT INTO user (phone, username , password, salt, is_deleted) VALUES (?, ?, ?, ?, '0')`
+            sqlParams = [phone, phone.substring(0, 3) + '****' + phone.substring(7), hashedPassword, salt]
         }
 
         // 执行SQL
@@ -426,6 +426,7 @@ const changeUsername = async (req, res) => {
  */
 const changeAvatar = async (req, res) => {
     const { user_id, avatar } = req.body
+    logger.info(avatar)
 
     let connection
     try {
@@ -716,6 +717,46 @@ const getUserBodyInfo = async (req, res) => {
         return
     }
 }
+/**
+ * 获取用户账户信息
+ */
+const getUserAccountInfo = async (req, res) => {
+    const { user_id } = req.query
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction() // 开始事务
+
+        // 查询用户是否存在且未被删除
+        let sql = `SELECT username, phone, email, avatar FROM user WHERE user_id = ? AND is_deleted = 0`
+        const [userResults] = await connection.query(sql, [user_id])
+        if (userResults.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        const { username, phone, email, avatar } = userResults[0]
+        // 将电话号码和邮箱脱敏
+        const phoneNumber = phone.substring(0, 3) + '****' + phone.substring(7)
+        const emailAddress = email !== null ? email.substring(0, 3) + '****' + email.substring(6) : email
+
+        let res_data = {
+            username,
+            phone: phoneNumber,
+            email: emailAddress,
+            avatar,
+        }
+
+        send(res, 2000, '获取账户信息成功', res_data)
+    } catch (error) {
+        logger.error('数据库操作出现错误：' + error.message)
+        send(res, 5000, '服务器内部错误')
+        return
+    } finally {
+        if (connection) {
+            await connection.rollback() // 捕获到任何异常，事务回滚
+        }
+        return
+    }
+}
 
 /**
  * 计算年龄
@@ -768,4 +809,5 @@ module.exports = {
     logout,
     updateUserBodyInfo,
     getUserBodyInfo,
+    getUserAccountInfo,
 }

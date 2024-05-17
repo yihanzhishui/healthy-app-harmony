@@ -177,6 +177,48 @@ const getSleepRecord = async (req, res) => {
 }
 
 /**
+ * 获取今天的睡眠时长
+ * 从sleep_record表中获取今天的睡眠时长、睡眠质量和记录时间
+ */
+
+const getTodaySleepDuration = async (req, res) => {
+    let user_id = req.query.user_id
+    const connection = await db.getConnection()
+
+    try {
+        let sql = `
+            SELECT
+            sleep_duration, sleep_quality, 
+            DATE_FORMAT(record_time, '%Y-%m-%d') AS formatted_record_time
+            from sleep_record
+            where user_id = ? AND DATE(record_time) = CURDATE()
+            ORDER BY record_time DESC 
+            LIMIT 1
+        `
+        let [results] = await connection.query(sql, [user_id])
+        if (results.length === 0) {
+            send(res, 2001, '没有今天的睡眠记录')
+            return
+        }
+
+        results.forEach((result) => {
+            result.record_time = result.formatted_record_time
+            delete result.formatted_record_time
+        })
+
+        send(res, 2000, '获取今天的睡眠记录成功', ...results)
+    } catch (error) {
+        logger.error('数据库操作出现错误：' + error.message)
+        send(res, 5001, '服务器内部错误')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 计算睡眠质量
  *  @param {string} bedTimeString 入睡时间
  *  @param {number} fallAsleepTimeMin 入睡时长
@@ -316,4 +358,5 @@ const calculateAverageTimes = (records) => {
 module.exports = {
     recordSleep,
     getSleepRecord,
+    getTodaySleepDuration,
 }

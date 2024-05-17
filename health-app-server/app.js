@@ -16,11 +16,12 @@ app.use(cors())
 
 // 导入并配置表单解析中间件
 const bodyParser = require('body-parser')
-app.use(bodyParser.urlencoded({ extended: false, limit: '1mb' }))
+app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }))
 
 // 使用express托管静态资源
 app.use('/food_image', express.static('assets/image/food_image'))
 app.use('/music_cover', express.static('assets/image/music_cover'))
+app.use('/avatar', express.static('assets/image/avatar'))
 app.use('/music', express.static('assets/music'))
 
 // 错误级别中间件
@@ -58,6 +59,9 @@ app.use('/music', verifyToken, musicRouter)
 // 验证码
 const verifyCodeRouter = require('./routes/verify_code/verify_code')
 app.use('/code', verifyCodeRouter)
+
+const uploadRouter = require('./routes/upload')
+app.use('/upload', verifyToken, uploadRouter)
 
 app.listen(port, () => {
     logger.info(`服务器运行在 http://localhost:${port}`)
