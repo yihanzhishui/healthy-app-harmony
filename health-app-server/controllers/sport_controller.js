@@ -50,12 +50,110 @@ const getAIFatLossPlan = async (req, res) => {
             age: calculateAge(birthday_db) ?? 20,
             ...other,
         })
-        let recommend_fat_loss_plan_ai_json = await ai_ask(
-            QUESTION.GET_AI_FAT_LOSS_PLAN,
-            user_info_json,
-            food_list_json
-        )
-        recommend_fat_loss_plan_ai_json = recommend_fat_loss_plan_ai_json.replace(/^\s*```json\s*\n|```$/gm, '')
+        let recommend_fat_loss_plan_ai_json
+        try {
+            recommend_fat_loss_plan_ai_json = await ai_ask(
+                QUESTION.GET_AI_FAT_LOSS_PLAN,
+                user_info_json,
+                food_list_json
+            )
+            recommend_fat_loss_plan_ai_json = recommend_fat_loss_plan_ai_json.replace(/^\s*```json\s*\n|```$/gm, '')
+        } catch (error) {
+            recommend_fat_loss_plan_ai_json = JSON.stringify({
+                plan_name: '健康减脂计划',
+                plan_cycle: 90,
+                plan_start_time: '2023-04-01',
+                plan_end_time: '2023-06-29',
+                calories_intake_per_day: 1800,
+                diet: {
+                    breakfast: [
+                        {
+                            food_id: 54,
+                            food_name: '鸡蛋',
+                            food_image: '/food_image/egg.png',
+                            diet_type: 'breakfast',
+                            eat_quantity: 2,
+                            calories_intake: 156,
+                        },
+                        {
+                            food_id: 57,
+                            food_name: '菠菜',
+                            food_image: '/food_image/spinach.png',
+                            diet_type: 'breakfast',
+                            eat_quantity: 100,
+                            calories_intake: 23,
+                        },
+                    ],
+                    lunch: [
+                        {
+                            food_id: 52,
+                            food_name: '大米',
+                            food_image: '/food_image/rice.png',
+                            diet_type: 'lunch',
+                            eat_quantity: 150,
+                            calories_intake: 525,
+                        },
+                        {
+                            food_id: 53,
+                            food_name: '西红柿',
+                            food_image: '/food_image/tomato.png',
+                            diet_type: 'lunch',
+                            eat_quantity: 200,
+                            calories_intake: 36,
+                        },
+                        {
+                            food_id: 56,
+                            food_name: '玉米面',
+                            food_image: '/food_image/corn.png',
+                            diet_type: 'lunch',
+                            eat_quantity: 50,
+                            calories_intake: 182.5,
+                        },
+                    ],
+                    dinner: [
+                        {
+                            food_id: 57,
+                            food_name: '菠菜',
+                            food_image: '/food_image/spinach.png',
+                            diet_type: 'dinner',
+                            eat_quantity: 100,
+                            calories_intake: 23,
+                        },
+                        {
+                            food_id: 55,
+                            food_name: '杏仁',
+                            food_image: '/food_image/almond.jpg',
+                            diet_type: 'dinner',
+                            eat_quantity: 10,
+                            calories_intake: 57.9,
+                        },
+                    ],
+                    extra_meal: [
+                        {
+                            food_id: 54,
+                            food_name: '鸡蛋',
+                            food_image: '/food_image/egg.png',
+                            diet_type: 'extra_meal',
+                            eat_quantity: 1,
+                            calories_intake: 78,
+                        },
+                    ],
+                },
+                exercise: {
+                    outdoor_running: {
+                        exercise_type: 'outdoor_running',
+                        exercise_time: '18:30',
+                        duration: 30,
+                        distance: 3000,
+                    },
+                },
+                sleep: {
+                    sleep_time: '23:00',
+                    wake_time: '06:30',
+                    duration: 450,
+                },
+            })
+        }
         // 格式化
         let recommend_fat_loss_plan_ai = JSON.parse(recommend_fat_loss_plan_ai_json)
 
@@ -448,6 +546,47 @@ const getFatLossPlan = async (req, res) => {
 }
 
 /**
+ * 添加运动记录
+ */
+const addSportRecord = async (req, res) => {
+    const { user_id, exercise_type, exercise_time, calories_burned, duration } = req.body
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [results] = await connection.query(sql_check, [user_id])
+        if (results.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        // 开始插入运动记录
+        let sql = `INSERT INTO exercise_record (user_id, exercise_type, exercise_time, calories_burned, duration, create_time) VALUES (?, ?, ?, ?, ?, NOW())`
+        let [insertResults] = await connection.query(sql, [
+            user_id,
+            exercise_type,
+            exercise_time,
+            calories_burned,
+            duration,
+        ])
+        if (insertResults.affectedRows === 0) {
+            connection.rollback()
+            send(res, 4003, '添加运动记录失败')
+            return
+        }
+        send(res, 2000, '添加运动记录成功')
+    } catch (error) {
+        connection.rollback()
+        sendError(error, req, res, 5000, '添加运动记录失败')
+    } finally {
+        if (connection) {
+            releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 计算年龄
  */
 function calculateAge(birthdate) {
@@ -489,4 +628,5 @@ module.exports = {
     adoptAIFatLossPlan,
     getLatestExercisePlan,
     getFatLossPlan,
+    addSportRecord,
 }

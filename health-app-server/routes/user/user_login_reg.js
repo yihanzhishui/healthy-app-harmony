@@ -54,7 +54,7 @@ router.get('/logout', logout)
 /**
  * 注销账号
  */
-router.delete('/delete_user', joiValidator(deleteUserSchema), deleteUser)
+router.delete('/delete_user', joiValidator(deleteUserSchema, true), deleteUser)
 
 // 导出路由实例
 module.exports = router

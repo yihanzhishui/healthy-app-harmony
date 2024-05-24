@@ -61,7 +61,7 @@ const decrypt = (req, res, next) => {
     }
 }
 
-// 解密函数 (保持与之前相同)
+// 解密函数
 function decryptfn(ciphertext, secretKey) {
     const key = CryptoJS.enc.Utf8.parse(secretKey)
     const bytes = CryptoJS.AES.decrypt(ciphertext, key, { mode: CryptoJS.mode.ECB })

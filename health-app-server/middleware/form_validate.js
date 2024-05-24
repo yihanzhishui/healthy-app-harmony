@@ -194,7 +194,6 @@ const changeUsernameSchema = Joi.object({
  */
 const deleteUserSchema = Joi.object({
     user_id: userIdSchema,
-    phone: phoneSchema,
     sms_code: verifyCodeSchema,
 })
 
@@ -426,6 +425,17 @@ const getFatLossPlanSchema = Joi.object({
     create_date: dateSchema,
 })
 
+/**
+ * 添加到运动记录验证规则
+ */
+const addRecordSchema = Joi.object({
+    user_id: userIdSchema,
+    exercise_type: Joi.string().required(),
+    exercise_time: Joi.string().regex(dateTimePattern).required(),
+    calories_burned: Joi.string().required(),
+    duration: Joi.string().required(),
+})
+
 // #endregion
 
 // #region 音乐相关验证
@@ -541,6 +551,7 @@ module.exports = {
     adoptAIFatLossPlanSchema,
     getLatestExercisePlanSchema,
     getFatLossPlanSchema,
+    addRecordSchema,
     // 音乐相关验证
     getMusicInfoByCategorySchema,
     getMusicSchema,

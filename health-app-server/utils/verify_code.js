@@ -15,7 +15,7 @@ const redis = require('./redis_manager')
  * @param {string | number} phone
  * @param {string | number} verify_code
  */
-const sendSMSVerifyCode = (phone, verify_code) => {
+const sendSMSVerifyCode = (phone, verify_code, user_id = -1, is_delete_user = false) => {
     const clientConfig = {
         credential: {
             secretId: process.env.secretId,
@@ -41,7 +41,11 @@ const sendSMSVerifyCode = (phone, verify_code) => {
     return client.SendSms(params).then(
         async (data) => {
             try {
-                await redis.set(phone, verify_code)
+                if (is_delete_user && user_id !== -1) {
+                    await redis.set(user_id, { phone, verify_code })
+                } else {
+                    await redis.set(phone, verify_code)
+                }
             } catch (error) {
                 logger.error('Redis 存储 Token 失败' + error.message)
             }

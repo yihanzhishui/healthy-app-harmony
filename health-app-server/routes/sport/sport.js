@@ -7,6 +7,7 @@ const {
     adoptAIFatLossPlanSchema,
     getLatestExercisePlanSchema,
     getFatLossPlanSchema,
+    addRecordSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
@@ -15,6 +16,7 @@ const {
     adoptAIFatLossPlan,
     getLatestExercisePlan,
     getFatLossPlan,
+    addSportRecord,
 } = require('../../controllers/sport_controller')
 
 const { send } = require('../../middleware/response_handler')
@@ -41,6 +43,11 @@ router.get('/get_latest_exercise_plan', joiValidator(getLatestExercisePlanSchema
  * 获取减脂计划表
  */
 router.get('/get_fat_loss_plan', joiValidator(getFatLossPlanSchema), getFatLossPlan)
+
+/**
+ * 添加运动记录
+ */
+router.put('/add_exercise_record', joiValidator(addRecordSchema), addSportRecord)
 
 // 导出路由实例
 module.exports = router

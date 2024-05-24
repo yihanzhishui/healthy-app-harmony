@@ -13,6 +13,7 @@ async function verifyToken(req, res, next) {
     // if(req.header('Authorization'))
     try {
         const token = req.header('authorization').toString().replace('Bearer ', '')
+        // logger.info('开始验证token：' + token)
         if (!token) {
             send(res, 4003, '无效的 token')
             return

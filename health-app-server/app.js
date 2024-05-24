@@ -18,15 +18,17 @@ app.use(cors())
 const bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false, limit: '10mb' }))
 
+// // 允许自定义请求头
+// app.use((req, res, next) => {
+//     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+//     next()
+// })
+
 // 使用express托管静态资源
 app.use('/food_image', express.static('assets/image/food_image'))
 app.use('/music_cover', express.static('assets/image/music_cover'))
 app.use('/avatar', express.static('assets/image/avatar'))
 app.use('/music', express.static('assets/music'))
-
-// 错误级别中间件
-const { sendError } = require('./middleware/response_handler')
-app.use(sendError)
 
 // 用户路由,无需token
 const userRouter = require('./routes/user/user_login_reg')
@@ -60,8 +62,12 @@ app.use('/music', verifyToken, musicRouter)
 const verifyCodeRouter = require('./routes/verify_code/verify_code')
 app.use('/code', verifyCodeRouter)
 
-const uploadRouter = require('./routes/upload')
+const uploadRouter = require('./routes/user/upload')
 app.use('/upload', verifyToken, uploadRouter)
+
+// 错误级别中间件
+const { sendError } = require('./middleware/response_handler')
+app.use(sendError)
 
 app.listen(port, () => {
     logger.info(`服务器运行在 http://localhost:${port}`)

@@ -104,9 +104,10 @@ const loginBySMSCode = async (req, res) => {
         if (results.length === 0) {
             await connection.rollback()
             send(res, 1001, '用户不存在')
+            return
         }
 
-        const { user_id, password, salt, avatar, ...payload } = results[0] // 快速剔除敏感信息
+        const { user_id, password, salt, avatar, ...payload } = results[0]
 
         const tokenManager = new TokenManager()
         const token = await tokenManager.generateToken(payload)
@@ -115,16 +116,19 @@ const loginBySMSCode = async (req, res) => {
         await connection.commit()
         logger.info(`用户 ${user_id} 通过短信验证码登录成功`)
         send(res, 2000, '登录成功', { user_id, token: `Bearer ${token}` })
+        return
     } catch (error) {
         if (connection) {
             await connection.rollback() // 失败时回滚事务
         }
         logger.error('数据库查询出现错误：' + error.message)
         send(res, 5000, '服务器内部错误')
+        return
     } finally {
         if (connection) {
             await releaseConnection(connection)
         }
+        return
     }
 }
 
@@ -291,9 +295,9 @@ const bindEmail = async (req, res) => {
         }
 
         sql = 'SELECT * FROM user WHERE email = ? AND is_deleted = 0'
-        const [emailResults] = await connection.query(sql, [email])
+        const [emailResults] = await connection.query(sql, email)
         // 检查邮箱是否已绑定其他账号
-        if (emailResults[0].email) {
+        if (emailResults.length > 0) {
             await connection.rollback() // 邮箱已绑定，事务回滚
             send(res, 4003, '该邮箱已绑定其他账号')
             return
@@ -550,8 +554,8 @@ const logout = (req, res) => {
  * 处理注销账户
  */
 const deleteUser = async (req, res) => {
-    const { user_id, phone, sms_code } = req.body
-    const sms_code_redis = await redis.get(phone)
+    const { user_id, sms_code } = req.query
+    const { phone, verify_code: sms_code_redis } = await redis.get(user_id)
 
     if (sms_code_redis !== sms_code) {
         send(res, 4002, '验证码错误')

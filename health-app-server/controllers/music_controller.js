@@ -234,7 +234,7 @@ const handleFavoriteMusic = async (req, res) => {
  * 根据用户id获取用户收藏的音乐
  */
 const getFavoriteMusicListByUserId = async (req, res) => {
-    const { user_id } = req.body
+    const { user_id } = req.query
     const page_number = parseInt(req.body.page_number) || 1
     const page_size = parseInt(req.body.page_size) || 10
     const offset = (page_number - 1) * page_size
@@ -242,8 +242,7 @@ const getFavoriteMusicListByUserId = async (req, res) => {
     const connection = await db.getConnection()
     try {
         let sql = `SELECT 
-                        music.music_id, music.music_name, music.listen_count, music.category ,music.music_album_cover,
-                        1 AS is_favorited
+                        music.music_id, music.music_name, music.listen_count, music.category ,music.music_album_cover
                     FROM 
                         music
                     INNER JOIN 
@@ -254,9 +253,14 @@ const getFavoriteMusicListByUserId = async (req, res) => {
                         music.music_id ASC
                     LIMIT ? OFFSET ?`
         let [result] = await connection.query(sql, [user_id, limit, offset])
+        logger.info('查询结果：' + result)
         if (result.length === 0) {
             send(res, 4004, '没有音乐信息')
             return
+        }
+        // 为每条数据添加is_favorite字段
+        for (let i = 0; i < result.length; i++) {
+            result[i].is_favorited = 1
         }
         send(res, 2000, '查询音乐信息成功', { result })
         await connection.commit()
