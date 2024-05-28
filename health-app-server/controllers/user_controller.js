@@ -187,21 +187,6 @@ const loginByEmailCode = async (req, res) => {
     }
 }
 
-// TODO
-/**
- *  处理华为账号登录
- */
-// const loginByHuaweiAccount = (req, res) => {
-//     const { huawei_auth_token } = req.body
-//     if (!huawei_auth_token) {
-//         sendError(res, 4002, '华为账号授权失败')
-//         return
-//     }
-//     let payload = {}
-//     let sql = `SELECT * FROM user WHERE huawei_auth_token = '${huawei_auth_token}'`
-//     // 查询数据库中是否已经存在该用户
-// }
-
 /**
  * 处理密码登录
  */

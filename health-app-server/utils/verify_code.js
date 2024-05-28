@@ -42,9 +42,9 @@ const sendSMSVerifyCode = (phone, verify_code, user_id = -1, is_delete_user = fa
         async (data) => {
             try {
                 if (is_delete_user && user_id !== -1) {
-                    await redis.set(user_id, { phone, verify_code })
+                    await redis.set(user_id, { phone, verify_code }, 600)
                 } else {
-                    await redis.set(phone, verify_code)
+                    await redis.set(phone, verify_code, 600)
                 }
             } catch (error) {
                 logger.error('Redis 存储 Token 失败' + error.message)
@@ -140,7 +140,8 @@ const sendEmailVerifyCode = async (email, verify_code) => {
             logger.error('邮件发送失败' + error.message)
         } else {
             try {
-                await redis.set(email, verify_code)
+                // 十分钟有效
+                await redis.set(email, verify_code, 600)
                 logger.info('邮件发送成功', info)
                 return
             } catch (error) {

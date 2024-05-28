@@ -28,9 +28,9 @@ class TokenManager {
      * @returns {Promise<void>}
      */
     async storeToken(token, userId, tokenTTL = token_config.TTL) {
-        const key = `token:${token}`
+        const key = 'token:' + userId
         try {
-            await redis.set(key, userId, tokenTTL)
+            await redis.set(key, token, tokenTTL)
         } catch (error) {
             throw new RedisError('Redis 存储 Token 失败', 5001)
         }
@@ -55,9 +55,20 @@ class TokenManager {
      * @param {String} token - JWT Token
      * @returns {Promise<void>}
      */
-    async removeToken(token) {
-        const key = `token:${token}`
+    async removeToken(key) {
+        key = 'token:' + key
         await redis.del(key)
+    }
+
+    /**
+     * 刷新 Token 有效期
+     * params {key} key - Token 键名
+     * params {number} tokenTTL - Token 过期时间（单位：秒）
+     * returns
+     */
+    async refreshTokenTTL(key, tokenTTL = 60000) {
+        key = 'token:' + key
+        await redis.refreshTTL(key, tokenTTL)
     }
 }
 

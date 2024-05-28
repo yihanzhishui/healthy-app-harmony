@@ -12,6 +12,7 @@ const redisClient = createClient({
 module.exports = {
     set: async (key, value, timeout = 60000) => {
         try {
+            logger.info(`Setting key: ${key}`)
             return await redisClient.set(key, value, { EX: timeout })
         } catch (error) {
             logger.error('Error setting key:', error)
@@ -20,6 +21,7 @@ module.exports = {
     },
     get: async (key) => {
         try {
+            logger.info(`Getting key: ${key}`)
             return await redisClient.get(key)
         } catch (error) {
             logger.error('Error getting key:', error)
@@ -33,5 +35,8 @@ module.exports = {
             logger.error('Error deleting key:', error)
             throw error
         }
+    },
+    refreshTTL: async (key, timeout = 60000) => {
+        await redisClient.expire(key, timeout)
     },
 }
