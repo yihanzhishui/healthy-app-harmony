@@ -820,6 +820,73 @@ const getUserAccountInfo = async (req, res) => {
 }
 
 /**
+ * 获取用户健康状况
+ */
+const getUserHealthInfo = async (req, res) => {
+    const { user_id } = req.query
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction() // 开始事务
+        // 查询用户是否存在且未被删除
+        let sql = `SELECT * FROM user WHERE user_id = ? AND is_deleted = 0`
+        const [userResults] = await connection.query(sql, [user_id])
+        if (userResults.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+
+        // 从user_info中获取用户身体信息
+        sql = `SELECT * FROM user_info WHERE user_id = ?`
+        const [userInfoResults] = await connection.query(sql, [user_id])
+        if (userInfoResults.length === 0) {
+            send(res, 4003, '用户信息不存在', { status: '良好' })
+            return
+        }
+        const { height, weight, birthday, gender } = userInfoResults[0]
+        // 根据上传的日期计算年龄
+        calculateAge(birthday)
+        // 计算BMI
+        const bmi = weight / (height / 100) ** 2
+        // 计算基础代谢
+        const basalMetabolicRate = 66 + 13.7 * weight + 5 * height - 6.8 * calculateAge(birthday)
+        // 评估用户的健康状况
+        let status = '良好'
+        if (bmi < 18.5) {
+            status = '偏瘦'
+        } else if (bmi >= 18.5 && bmi < 24) {
+            status = '正常'
+        } else if (bmi >= 24 && bmi < 28) {
+            status = '偏胖'
+        } else if (bmi >= 28) {
+            status = '肥胖'
+        } else {
+            status = '未知'
+        }
+
+        // 返回用户的健康信息
+        const res_data = {
+            height,
+            weight,
+            birthday,
+            gender,
+            bmi,
+            basalMetabolicRate,
+            status,
+        }
+        send(res, 2000, '获取用户健康状况成功', res_data)
+        connection.commit() // 提交事务
+    } catch (error) {
+        logger.error('获取用户健康状况失败：' + error.message)
+        send(res, 5000, '服务器内部错误')
+    } finally {
+        if (connection) {
+            releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 计算年龄
  */
 function calculateAge(birthdate) {
@@ -872,4 +939,5 @@ module.exports = {
     updateUserBodyInfo,
     getUserBodyInfo,
     getUserAccountInfo,
+    getUserHealthInfo,
 }

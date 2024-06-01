@@ -22,6 +22,7 @@ const {
     updateUserBodyInfo,
     getUserBodyInfo,
     getUserAccountInfo,
+    getUserHealthInfo,
 } = require('../../controllers/user_controller')
 
 const { decrypt } = require('../../middleware/decrypt')
@@ -71,6 +72,11 @@ router.get('/get_user_body_info', joiValidator(updateUserBodyInfoSchema, true), 
  * 获取用户账号信息
  */
 router.get('/get_user_account_info', joiValidator(getUserAccountInfoSchema, true), getUserAccountInfo)
+
+/**
+ * 获取健康状况
+ */
+router.get('/get_user_health_status', joiValidator(getUserAccountInfoSchema, true), getUserAccountInfo)
 
 // 导出路由实例
 module.exports = router
