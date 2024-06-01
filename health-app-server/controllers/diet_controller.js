@@ -85,9 +85,6 @@ const addToDietRecord = async (req, res) => {
 const getDietRecordByType = async (req, res) => {
     let { user_id, diet_type, eat_time } = req.query
     if (!eat_time) eat_time = getTodayDate()
-    logger.info('+++++' + eat_time)
-    logger.info('+++++' + user_id)
-    logger.info('+++++' + diet_type)
     const connection = await db.getConnection()
     try {
         // 开启事务

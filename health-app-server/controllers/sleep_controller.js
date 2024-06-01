@@ -28,6 +28,19 @@ const recordSleep = async (req, res) => {
             return
         }
 
+        // 查询今日是否已经记录睡眠
+        const checkTodaySleepSql = `
+            SELECT COUNT(*) AS today_exists FROM sleep_record
+            WHERE user_id = ? AND DATE(record_time) = CURDATE()`
+
+        const [[todayExistsResult]] = await connection.query(checkTodaySleepSql, [user_id])
+
+        if (todayExistsResult.today_exists) {
+            await connection.rollback()
+            send(res, 4004, '今日已记录睡眠')
+            return
+        }
+
         const insertSql = `
             INSERT INTO sleep_record (
                 user_id, bed_time, sleep_interval, wake_time, wake_up_interval, 

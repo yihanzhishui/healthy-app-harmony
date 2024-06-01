@@ -9,11 +9,13 @@ const {
     bindHuaweiAccountSchema,
     updateUserBodyInfoSchema,
     getUserAccountInfoSchema,
+    forgetPasswordSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
     changeUsername,
     changePassword,
+    forgetPassword,
     changeAvatar,
     bindEmail,
     bindHuaweiAccount,
@@ -33,6 +35,11 @@ router.put('/update_username', joiValidator(changeUsernameSchema), changeUsernam
  * 修改用户密码
  */
 router.put('/update_password', joiValidator(changePasswordSchema), decrypt, changePassword)
+
+/**
+ * 忘记密码
+ */
+router.put('/forget_password', joiValidator(forgetPasswordSchema), decrypt, forgetPassword)
 
 /**
  * 修改用户头像

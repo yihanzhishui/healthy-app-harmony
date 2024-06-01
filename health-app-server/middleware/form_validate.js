@@ -173,6 +173,16 @@ const changePasswordSchema = Joi.object({
 })
 
 /**
+ * 处理忘记密码请求的验证规则
+ */
+const forgetPasswordSchema = Joi.object({
+    phone: phoneSchema,
+    sms_code: verifyCodeSchema,
+    new_password: newPasswordSchema,
+    confirm_password: reNewPasswordSchema,
+})
+
+/**
  * 绑定邮箱验证规则
  */
 const bindEmailSchema = Joi.object({
@@ -533,6 +543,7 @@ module.exports = {
     bindEmailSchema,
     updateUserBodyInfoSchema,
     getUserAccountInfoSchema,
+    forgetPasswordSchema,
     // 睡眠相关验证
     sleepTimeSchema,
     getSleepSchema,

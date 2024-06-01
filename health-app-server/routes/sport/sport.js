@@ -8,6 +8,7 @@ const {
     getLatestExercisePlanSchema,
     getFatLossPlanSchema,
     addRecordSchema,
+    getUserAccountInfoSchema,
     joiValidator,
 } = require('../../middleware/form_validate')
 const {
@@ -17,6 +18,8 @@ const {
     getLatestExercisePlan,
     getFatLossPlan,
     addSportRecord,
+    getSportRecord,
+    getTodaySportCalories,
 } = require('../../controllers/sport_controller')
 
 const { send } = require('../../middleware/response_handler')
@@ -48,6 +51,16 @@ router.get('/get_fat_loss_plan', joiValidator(getFatLossPlanSchema), getFatLossP
  * 添加运动记录
  */
 router.put('/add_exercise_record', joiValidator(addRecordSchema), addSportRecord)
+
+/**
+ * 获取运动记录
+ */
+router.get('/get_exercise_record', joiValidator(getLatestExercisePlanSchema, true), getSportRecord)
+
+/**
+ * 获取今日运动消耗
+ */
+router.get('/get_today_exercise_calories', joiValidator(getUserAccountInfoSchema, true), getTodaySportCalories)
 
 // 导出路由实例
 module.exports = router

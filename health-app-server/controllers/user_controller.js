@@ -10,7 +10,7 @@ const db_error = (res, err) => {
     logger.error('数据库查询出现错误：' + err.message)
     send(res, 5001, '数据库查询出现错误')
 }
-// TODO 记得每次请求过后清除redis中的验证码
+
 /**
  * 处理用户注册
  */
@@ -22,6 +22,9 @@ const register = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
+
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
 
     const connection = await db.getConnection()
     try {
@@ -92,6 +95,8 @@ const loginBySMSCode = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
 
     let connection
     try {
@@ -144,10 +149,11 @@ const loginByEmailCode = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
 
-    let connection
+    let connection = await db.getConnection()
     try {
-        connection = await db.getConnection()
         await connection.beginTransaction() // 开始事务
 
         const sql = `SELECT * FROM user WHERE email = ? AND is_deleted = 0`
@@ -200,6 +206,8 @@ const loginByPassword = async (req, res) => {
         send(res, 4002, '账号格式错误')
         return
     }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
     const connection = await db.getConnection()
 
     try {
@@ -264,7 +272,8 @@ const bindEmail = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
-
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
     const connection = await db.getConnection()
     try {
         await connection.beginTransaction() // 开始事务
@@ -468,6 +477,8 @@ const changePassword = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
 
     const connection = await db.getConnection()
     try {
@@ -483,13 +494,16 @@ const changePassword = async (req, res) => {
             return
         }
 
-        // 验证旧密码
-        const { password: hashPassword, salt } = userResults[0]
-        const oldSaltPassword = bcryptjs.hashSync(old_password, salt)
-        if (oldSaltPassword !== hashPassword) {
-            await connection.rollback() // 旧密码错误，事务回滚
-            send(res, 4003, '旧密码错误')
-            return
+        // 如果旧密码不为空，则为修改密码
+        if (!old_password) {
+            // 验证旧密码
+            const { password: hashPassword, salt } = userResults[0]
+            const oldSaltPassword = bcryptjs.hashSync(old_password, salt)
+            if (oldSaltPassword !== hashPassword) {
+                await connection.rollback() // 旧密码错误，事务回滚
+                send(res, 4003, '旧密码错误')
+                return
+            }
         }
 
         // 生成新密码的盐并加密新密码
@@ -504,6 +518,62 @@ const changePassword = async (req, res) => {
             await connection.commit() // 更新成功，提交事务
             logger.info(`用户 ${user_id} 修改密码成功, 成功修改 1 条数据`)
             send(res, 2000, '修改密码成功，请重新登录')
+        } else {
+            await connection.rollback() // 更新失败，事务回滚
+            send(res, 5000, '修改密码失败')
+        }
+    } catch (error) {
+        if (connection) {
+            await connection.rollback() // 捕获到任何异常，事务回滚
+        }
+        logger.error('数据库操作出现错误：' + error.message)
+        send(res, 5000, '服务器内部错误')
+    } finally {
+        if (connection) {
+            await releaseConnection(connection)
+        }
+    }
+}
+
+/**
+ * 处理找回密码
+ */
+const forgetPassword = async (req, res) => {
+    const { new_password, phone, sms_code } = req.body
+    const smsCodeRedis = await redis.get(phone)
+    if (smsCodeRedis !== sms_code) {
+        send(res, 4002, '验证码错误')
+        return
+    }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
+
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction() // 开始事务
+
+        // 查询用户是否存在且未被删除
+        let sql = 'SELECT * FROM user WHERE phone = ? AND is_deleted = 0'
+        const [userResults] = await connection.query(sql, [phone])
+
+        if (userResults.length === 0) {
+            await connection.rollback() // 用户不存在，事务回滚
+            send(res, 4003, '该手机号未注册')
+            return
+        }
+
+        // 生成新密码的盐并加密新密码
+        const newSalt = bcryptjs.genSaltSync(10)
+        const newSaltPassword = bcryptjs.hashSync(new_password, newSalt)
+
+        // 更新密码
+        sql = 'UPDATE user SET password = ?, salt = ? WHERE user_id = ?'
+        const [updateResults] = await connection.query(sql, [newSaltPassword, newSalt, userResults[0].user_id])
+
+        if (updateResults.affectedRows === 1) {
+            await connection.commit() // 更新成功，提交事务
+            logger.info(`用户 ${user_id} 修改密码成功, 成功修改 1 条数据`)
+            send(res, 2000, '修改密码成功，请登录')
         } else {
             await connection.rollback() // 更新失败，事务回滚
             send(res, 5000, '修改密码失败')
@@ -546,6 +616,8 @@ const deleteUser = async (req, res) => {
         send(res, 4002, '验证码错误')
         return
     }
+    // TODO 验证通过，删除验证码
+    // await redis.del(phone)
 
     const connection = await db.getConnection()
     // 开始事务
@@ -792,6 +864,7 @@ module.exports = {
     changeUsername,
     changeAvatar,
     changePassword,
+    forgetPassword,
     deleteUser,
     bindEmail,
     bindHuaweiAccount,

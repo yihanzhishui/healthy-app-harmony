@@ -322,6 +322,7 @@ const adoptAIFatLossPlan = async (req, res) => {
             send(res, 4003, 'AI减脂方案不存在')
             return
         }
+
         // 格式化
         let recommend_fat_loss_plan_ai = JSON.parse(recommend_fat_loss_plan_ai_json)
         // 处理、拆分数据
@@ -435,6 +436,8 @@ const adoptAIFatLossPlan = async (req, res) => {
         await redis.del(AI_ANSWER_KEY_FAT_LOSS + user_id)
         // 提交事务
         await connection.commit()
+        // 做完这些操作后将redis中数据清除
+        await redis.del(AI_ANSWER_KEY_FAT_LOSS + user_id)
     } catch (error) {
         // 回滚事务
         await connection.rollback()
@@ -587,6 +590,99 @@ const addSportRecord = async (req, res) => {
 }
 
 /**
+ * 获取运动记录表
+ */
+const getSportRecord = async (req, res) => {
+    let { user_id, offset, limit } = req.query
+    if (offset === undefined || limit === undefined) {
+        ;(offset = 1), (limit = 10)
+    }
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [userResults] = await connection.query(sql_check, [user_id])
+        if (userResults.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        // 开始查询运动记录表
+        let sql = `SELECT *,
+                        DATE_FORMAT(exercise_time, '%Y-%m-%d') AS formatted_exercise_time,
+                        DATE_FORMAT(create_time, '%Y-%m-%d') AS formatted_create_time
+                    FROM 
+                        exercise_record 
+                    WHERE
+                        user_id = ? 
+                    ORDER BY
+                        create_time DESC 
+                    LIMIT ? OFFSET ?`
+        let [results] = await connection.query(sql, [user_id, offset, limit])
+        // 处理查询结果
+        let response_data = []
+        results.forEach((result) => {
+            response_data.push({
+                exercise_record_id: result.exercise_record_id,
+                exercise_type: result.exercise_type,
+                exercise_time: result.formatted_exercise_time,
+                distance: result.exercise_time * 0.000621371192,
+                calories_burned: result.calories_burned,
+                duration: result.duration,
+            })
+        })
+
+        send(res, 2000, '获取运动记录成功', response_data)
+    } catch (error) {
+        connection.rollback()
+        sendError(error, req, res, 5000, '获取运动记录失败')
+    } finally {
+        if (connection) {
+            releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
+ * 获取今日运动消耗热量
+ */
+const getTodaySportCalories = async (req, res) => {
+    let { user_id } = req.query
+    const connection = await db.getConnection()
+    try {
+        await connection.beginTransaction()
+        // 检查用户是否存在
+        let sql_check = `SELECT * FROM user WHERE user_id = ? AND is_deleted = '0'`
+        let [userResults] = await connection.query(sql_check, [user_id])
+        if (userResults.length === 0) {
+            send(res, 4003, '用户不存在')
+            return
+        }
+        // 开始查询运动记录表
+        let sql = `SELECT SUM(calories_burned) AS total_calories
+                    FROM exercise_record
+                    WHERE user_id = ?
+                    AND DATE(exercise_time) = CURDATE()`
+
+        let [results] = await connection.query(sql, [user_id])
+        let total_calories = results[0].total_calories
+        if (total_calories === null) {
+            total_calories = 0
+        }
+        send(res, 2000, '获取今日运动消耗热量成功', total_calories)
+    } catch (error) {
+        connection.rollback()
+        sendError(error, req, res, 5000, '获取今日运动消耗热量失败')
+    } finally {
+        if (connection) {
+            releaseConnection(connection)
+        }
+        return
+    }
+}
+
+/**
  * 计算年龄
  */
 function calculateAge(birthdate) {
@@ -629,4 +725,6 @@ module.exports = {
     getLatestExercisePlan,
     getFatLossPlan,
     addSportRecord,
+    getSportRecord,
+    getTodaySportCalories,
 }
