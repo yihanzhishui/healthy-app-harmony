@@ -869,7 +869,7 @@ const getUserHealthInfo = async (req, res) => {
             weight,
             birthday,
             gender,
-            bmi,
+            bmi: bmi.toFixed(2),
             basalMetabolicRate,
             status,
         }

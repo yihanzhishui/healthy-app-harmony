@@ -76,7 +76,7 @@ router.get('/get_user_account_info', joiValidator(getUserAccountInfoSchema, true
 /**
  * 获取健康状况
  */
-router.get('/get_user_health_status', joiValidator(getUserAccountInfoSchema, true), getUserAccountInfo)
+router.get('/get_user_health_status', joiValidator(getUserAccountInfoSchema, true), getUserHealthInfo)
 
 // 导出路由实例
 module.exports = router
